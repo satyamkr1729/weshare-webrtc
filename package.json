@@ -1,0 +1,21 @@
+{
+  "name": "weshare--webrtc",
+  "version": "1.0.0",
+  "description": "Enabled video streaming and screen sharing over webRTC",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Satyam and Abhishek",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-static": "^1.2.6",
+    "node-static": "^0.7.11",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-google": "^0.14.0"
+  }
+}
