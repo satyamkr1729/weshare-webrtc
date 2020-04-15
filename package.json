@@ -4,6 +4,7 @@
   "description": "Enabled video streaming and screen sharing over webRTC",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Satyam and Abhishek",

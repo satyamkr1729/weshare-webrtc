@@ -2,11 +2,12 @@
 /* eslint-disable max-len */
 const express = require('express');
 const app = express();
+const process = require('process');
 // eslint-disable-next-line new-cap
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-const port = 8090;
+const port = process.env.PORT || 8090;
 
 app.use('/dashboard', express.static(__dirname + '/dashboard'));
 server.listen(port);
