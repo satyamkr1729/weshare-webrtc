@@ -3,8 +3,14 @@
         <title>Hello</title>
     </head>
     <body>
-        Hello world!!
-        <textarea id="imp"></textarea>
+        <h1>Realtime communication with WebRTC</h1>
+
+        <div id="videos">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <video id="recieverVideo" autoplay muted playsinline></video>
+            <button value="call">Call</button>
+        </div>
+        <!----add scripts-->
         <script src="/socket.io/socket.io.js"></script>
         <script src="dashboard/js/main.js"></script>
     </body>
