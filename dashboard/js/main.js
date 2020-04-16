@@ -7,7 +7,7 @@ let pc;
 
 const pcConfig = {
   'iceServers': [{
-    'urls': 'stun:stun.l.google.com:19302',
+    urls: 'stun:stun.stunprotocol.org',
   }],
 };
 
@@ -35,19 +35,19 @@ socket.on('joined', function(room) {
 });
 
 socket.on('message', function(message) {
-  console.log('Client received message:', message);
+  // console.log('Client received message:', message);
   if (message === 'got user media') {
     maybeStart();
   } else if (message.type === 'offer') {
     handleOffer(message);
   } else if (message.type === 'answer') {
-    pc.setRemoteDescription(new RTCSessionDescription(message));
+    pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
   } else if (message.type === 'candidate') {
     const candidate = new RTCIceCandidate({
       sdpMLineIndex: message.label,
       candidate: message.candidate,
     });
-    pc.addIceCandidate(candidate);
+    pc.addIceCandidate(candidate).catch((err) => console.log(candidate));
   } else if (message === 'bye') {
     handleRemoteHangup();
   }
@@ -76,13 +76,12 @@ function createPeerConnection() {
  * @param {Object} event
  */
 function handleIceCandidate(event) {
-  console.log('icecandidate event: ', event);
   if (event.candidate) {
     sendMessage({
       type: 'candidate',
       label: event.candidate.sdpMLineIndex,
       id: event.candidate.sdpMid,
-      candidate: event.candidate,
+      candidate: event.candidate.candidate,
     });
   } else {
     console.log('End of candidates.');
@@ -133,16 +132,6 @@ function handleOffer(msg) {
   const desc = new RTCSessionDescription(msg.sdp);
 
   pc.setRemoteDescription(desc).then(() => {
-    return navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: true,
-    });
-  }).then((stream) => {
-    videoElement.srcObject = stream;
-    stream.getTracks().forEach((track) => {
-      pc.addTrack(track, stream);
-    });
-  }).then(() => {
     return pc.createAnswer();
   }).then((answer) => {
     return pc.setLocalDescription(answer);
