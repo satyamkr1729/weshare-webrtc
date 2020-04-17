@@ -168,3 +168,13 @@ document.querySelector('button').addEventListener('click', (ev) => {
     console.log(err);
   });
 });
+
+document.querySelector('input#file').addEventListener('change', (ev) => {
+  createPeerConnection();
+  videoElement.src = URL.createObjectURL(ev.srcElement.files[0]);
+  const stream = videoElement.captureStream();
+  stream.addEventListener('addtrack', (ev) => {
+    console.log(ev.track);
+    pc.addTrack(ev.track, stream);
+  });
+});
