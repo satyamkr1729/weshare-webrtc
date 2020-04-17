@@ -157,7 +157,7 @@ function sendMessage(message) {
 document.querySelector('button').addEventListener('click', (ev) => {
   createPeerConnection();
   navigator.mediaDevices.getUserMedia({
-    audio: false,
+    audio: true,
     video: true,
   }).then((stream) => {
     videoElement.srcObject = stream;
