@@ -4,6 +4,7 @@
 const videoElement = document.querySelector('video#localVideo');
 const receiverElement = document.querySelector('video#recieverVideo');
 let pc;
+let dataChannel;
 
 const pcConfig = {
   'iceServers': [{
@@ -40,6 +41,8 @@ socket.on('message', function(message) {
     maybeStart();
   } else if (message.type === 'offer') {
     handleOffer(message);
+  } else if (message.type === 'data-offer') {
+    handleDataOffer(message);
   } else if (message.type === 'answer') {
     pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
   } else if (message.type === 'candidate') {
@@ -68,6 +71,24 @@ function createPeerConnection() {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
     alert('Cannot create RTCPeerConnection object.');
     return;
+  }
+}
+
+/**
+ * creates rtc data channel
+ */
+function createDataConnection() {
+  try {
+    pc = new RTCPeerConnection();
+    pc.onicecandidate = handleIceCandidate;
+    dataChannel = pc.createDataChannel('myChannel');
+    dataChannel.onclose = handleDataChannelStateChange;
+    dataChannel.onopen = handleDataChannelStateChange;
+    dataChannel.onmessage = handleMessage;
+    pc.onnegotiationneeded = handleDataNegotiation;
+    console.log('create RTCPeerCOnnection!!');
+  } catch (e) {
+    console.log(e);
   }
 }
 
@@ -116,11 +137,36 @@ function handleNegotiation() {
 }
 
 /**
+ * negotiation in case of data channel
+ */
+function handleDataNegotiation() {
+  pc.createOffer().then((offer) => {
+    return pc.setLocalDescription(offer);
+  }).then(() => {
+    sendMessage({
+      type: 'data-offer',
+      sdp: pc.localDescription,
+    });
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+
+/**
  * Handles removal of remote stream
  * @param {Object} event
  */
 function handleRemoteStreamRemoved(event) {
   console.log('Remote stream removed. Event: ', event);
+}
+
+/**
+ * handles message
+ * @param {Object} ev
+ */
+function handleMessage(ev) {
+  console.log(ev.data);
+  document.querySelector('textarea#message').value = ev.data;
 }
 
 /**
@@ -143,6 +189,48 @@ function handleOffer(msg) {
   }).catch((err) => {
     console.log(err);
   });
+}
+
+/**
+ * handles data offer
+ * @param {Object} msg
+ */
+function handleDataOffer(msg) {
+  createPeerConnection();
+  const desc = new RTCSessionDescription(msg.sdp);
+  pc.ondatachannel = handleDataChannel;
+  pc.setRemoteDescription(desc).then(() => {
+    return pc.createAnswer();
+  }).then((answer) => {
+    return pc.setLocalDescription(answer);
+  }).then(() => {
+    sendMessage({
+      type: 'answer',
+      sdp: pc.localDescription,
+    });
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+
+/**
+ * handles datachannel event on callee side
+ * @param {Object} ev
+ */
+function handleDataChannel(ev) {
+  console.log('Data Channel recieved: ' + ev);
+  dataChannel = ev.channel;
+  dataChannel.onopen = handleDataChannelStateChange;
+  dataChannel.onclose = handleDataChannelStateChange;
+  dataChannel.onmessage = handleMessage;
+}
+
+/**
+ * handle state change
+ * @param {Object} e
+ */
+function handleDataChannelStateChange(e) {
+  console.log('State changed: ' + e);
 }
 
 /**
@@ -177,4 +265,13 @@ document.querySelector('input#file').addEventListener('change', (ev) => {
     console.log(ev.track);
     pc.addTrack(ev.track, stream);
   });
+});
+
+document.querySelector('input#call').addEventListener('click', (ev) => {
+  createDataConnection();
+});
+
+document.querySelector('input#send').addEventListener('click', (ev) => {
+  const msg = document.querySelector('textarea#message').value;
+  dataChannel.send(msg);
 });
