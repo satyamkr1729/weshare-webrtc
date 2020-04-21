@@ -8,6 +8,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
 const port = process.env.PORT || 8090;
+const socketDetails = {};
 
 app.use('/dashboard', express.static(__dirname + '/dashboard'));
 server.listen(port);
@@ -21,24 +22,29 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('connection incoming');
 
-  socket.on('create or join', (room) => {
-    const clientsInRoom = io.sockets.adapter.rooms[room];
+  socket.on('create or join', (detail) => {
+    const clientsInRoom = io.sockets.adapter.rooms[detail.roomName];
     const numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
     if (numClients === 0) {
-      socket.join(room);
-      console.log(`Client ID ${socket.id} created room ${room}`);
-      socket.emit('created', room, socket.id);
-    } else if (numClients >= 1) {
-      console.log('Client ID ' + socket.id + ' joined room ' + room);
-      io.sockets.in(room).emit('join', room);
-      socket.join(room);
-      socket.emit('joined', room, socket.id);
-      io.sockets.in(room).emit('ready');
+      socket.join(detail.roomName);
+      console.log(`Client ID ${socket.id} created room ${detail.roomName}`);
+      socket.emit('created', detail.roomName, socket.id);
+    } else {
+      console.log('Client ID ' + socket.id + ' joined room ' + detail.roomName);
+      const clientList = Object.keys(clientsInRoom.sockets).map((key) => {
+        return Object.assign({}, {socketId: key, userName: socketDetails[key]});
+      });
+      console.log(clientList);
+      io.sockets.in(detail.roomName).emit('client', detail.roomName, socket.id, detail.userName);
+      socket.join(detail.roomName);
+      socket.emit('joined', detail.roomName, socket.id, clientList);
     }
+    socketDetails[socket.id] = detail.userName;
   });
 
-  socket.on('message', (message) => {
+  socket.on('message', (message, socketId) => {
     console.log(message);
-    socket.broadcast.emit('message', message);
+    socket.to(socketId).emit('message', message, socket.id);
+    // socket.broadcast.emit('message', message);
   });
 });

@@ -1,277 +1,107 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable max-len */
 'use strict';
 
-const videoElement = document.querySelector('video#localVideo');
-const receiverElement = document.querySelector('video#recieverVideo');
-let pc;
-let dataChannel;
-
-const pcConfig = {
-  'iceServers': [{
-    urls: 'stun:stun.stunprotocol.org',
-  }],
-};
-
-const room = 'foo';
-
-const socket = io.connect();
-
-socket.emit('create or join', room);
-
-socket.on('created', (room) => {
-  console.log('Created room ' + room);
-});
-
-socket.on('full', (room) => {
-  console.log('Room ' + room + ' is full');
-});
-
-socket.on('join', (room) => {
-  console.log('Another peer made a request to join room ' + room);
-  console.log('This peer is the initiator of room ' + room + '!');
-});
-
-socket.on('joined', function(room) {
-  console.log('joined: ' + room);
-});
-
-socket.on('message', function(message) {
-  // console.log('Client received message:', message);
-  if (message === 'got user media') {
-    maybeStart();
-  } else if (message.type === 'offer') {
-    handleOffer(message);
-  } else if (message.type === 'data-offer') {
-    handleDataOffer(message);
-  } else if (message.type === 'answer') {
-    pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
-  } else if (message.type === 'candidate') {
-    const candidate = new RTCIceCandidate({
-      sdpMLineIndex: message.label,
-      candidate: message.candidate,
-    });
-    pc.addIceCandidate(candidate).catch((err) => console.log(candidate));
-  } else if (message === 'bye') {
-    handleRemoteHangup();
-  }
-});
+let userName;
+let clientList = [];
+let socket;
 
 /**
- * creates peer connection over rtc
+ * creates socket connection
+ * @param {string} userName
+ * @param {string} roomName
  */
-function createPeerConnection() {
-  try {
-    pc = new RTCPeerConnection(pcConfig);
-    pc.onicecandidate = handleIceCandidate;
-    pc.ontrack = handleTrackAdded;
-    pc.onnegotiationneeded = handleNegotiation;
-    pc.onremovestream = handleRemoteStreamRemoved;
-    console.log('Created RTCPeerConnnection');
-  } catch (e) {
-    console.log('Failed to create PeerConnection, exception: ' + e.message);
-    alert('Cannot create RTCPeerConnection object.');
-    return;
-  }
-}
+function createSocketConnection(userName, roomName) {
+  socket = io.connect();
 
-/**
- * creates rtc data channel
- */
-function createDataConnection() {
-  try {
-    pc = new RTCPeerConnection();
-    pc.onicecandidate = handleIceCandidate;
-    dataChannel = pc.createDataChannel('myChannel');
-    dataChannel.onclose = handleDataChannelStateChange;
-    dataChannel.onopen = handleDataChannelStateChange;
-    dataChannel.onmessage = handleMessage;
-    pc.onnegotiationneeded = handleDataNegotiation;
-    console.log('create RTCPeerCOnnection!!');
-  } catch (e) {
-    console.log(e);
-  }
-}
+  socket.emit('create or join', {roomName, userName});
 
-/**
- * handles ICE candidate
- * @param {Object} event
- */
-function handleIceCandidate(event) {
-  if (event.candidate) {
-    sendMessage({
-      type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate,
-    });
-  } else {
-    console.log('End of candidates.');
-  }
-}
+  socket.on('created', (room, id) => {
+    console.log('Created room: ' + room + ' My id: ' + id);
+    alert(`Joined ${room} successfully`);
+  });
 
-/**
- * handles track event
- * @param {Object} ev
- */
-function handleTrackAdded(ev) {
-  receiverElement.srcObject = ev.streams[0];
-}
+  socket.on('client', (room, socketId, userName) => {
+    const client = new Client(socketId, userName, sendMessage);
+    clientList.push(client);
+    addClient(client);
+    console.log(`Client ${userName} with id ${socketId} joined room ` + room);
+  });
 
-/**
- * handles negotiation
- */
-function handleNegotiation() {
-  pc.createOffer({
-    offerToReceiveAudio: false,
-    offerToReceiveVideo: false,
-  }).then((offer) => {
-    return pc.setLocalDescription(offer);
-  }).then(() => {
-    sendMessage({
-      type: 'offer',
-      sdp: pc.localDescription,
-    });
-  }).catch((err) => {
-    console.log(err);
+  socket.on('joined', function(room, socketId, presentClientList) {
+    clientList = presentClientList.map((val) => new Client(val.socketId, val.userName, sendMessage));
+    clientList.forEach((client) => addClient(client));
+    console.log('joined: ' + room + ' My id: ' + socketId);
+    alert(`Joined ${room} successfully`);
+  });
+
+  socket.on('message', function(message, socketId) {
+    // console.log('Client received message:', message);
+    const client = clientList.find((val) => val.socketId === socketId);
+    if (message.type === 'data-offer') {
+      document.querySelector('div#chat-box').setAttribute('data-id', socketId);
+      client.handleDataOffer(message);
+    } else if (message.type === 'answer') {
+      document.querySelector('div#chat-box').setAttribute('data-id', socketId);
+      client.handleAnswer(message);
+    } else if (message.type === 'candidate') {
+      client.handleCandidate(message);
+    }
   });
 }
 
 /**
- * negotiation in case of data channel
+ * adds client to ui
+ * @param {Client} client
  */
-function handleDataNegotiation() {
-  pc.createOffer().then((offer) => {
-    return pc.setLocalDescription(offer);
-  }).then(() => {
-    sendMessage({
-      type: 'data-offer',
-      sdp: pc.localDescription,
-    });
-  }).catch((err) => {
-    console.log(err);
+function addClient(client) {
+  const node = document.querySelector('div#client-list ul');
+  const html = `
+    <li class="client" data-id=${client.socketId}>${client.name}</li>
+  `;
+  node.insertAdjacentHTML('beforeend', html);
+
+  node.lastElementChild.addEventListener('click', (ev) => {
+    const client = clientList.find((val) => val.socketId === ev.srcElement.getAttribute('data-id'));
+    client.connect();
   });
-}
-
-/**
- * Handles removal of remote stream
- * @param {Object} event
- */
-function handleRemoteStreamRemoved(event) {
-  console.log('Remote stream removed. Event: ', event);
-}
-
-/**
- * handles message
- * @param {Object} ev
- */
-function handleMessage(ev) {
-  console.log(ev.data);
-  document.querySelector('textarea#message').value = ev.data;
-}
-
-/**
- * handles offer created in rtc
- * @param {Json} msg
- */
-function handleOffer(msg) {
-  createPeerConnection();
-  const desc = new RTCSessionDescription(msg.sdp);
-
-  pc.setRemoteDescription(desc).then(() => {
-    return pc.createAnswer();
-  }).then((answer) => {
-    return pc.setLocalDescription(answer);
-  }).then(() => {
-    sendMessage({
-      type: 'answer',
-      sdp: pc.localDescription,
-    });
-  }).catch((err) => {
-    console.log(err);
-  });
-}
-
-/**
- * handles data offer
- * @param {Object} msg
- */
-function handleDataOffer(msg) {
-  createPeerConnection();
-  const desc = new RTCSessionDescription(msg.sdp);
-  pc.ondatachannel = handleDataChannel;
-  pc.setRemoteDescription(desc).then(() => {
-    return pc.createAnswer();
-  }).then((answer) => {
-    return pc.setLocalDescription(answer);
-  }).then(() => {
-    sendMessage({
-      type: 'answer',
-      sdp: pc.localDescription,
-    });
-  }).catch((err) => {
-    console.log(err);
-  });
-}
-
-/**
- * handles datachannel event on callee side
- * @param {Object} ev
- */
-function handleDataChannel(ev) {
-  console.log('Data Channel recieved: ' + ev);
-  dataChannel = ev.channel;
-  dataChannel.onopen = handleDataChannelStateChange;
-  dataChannel.onclose = handleDataChannelStateChange;
-  dataChannel.onmessage = handleMessage;
-}
-
-/**
- * handle state change
- * @param {Object} e
- */
-function handleDataChannelStateChange(e) {
-  console.log('State changed: ' + e);
 }
 
 /**
  * sends socket message
  * @param {Object | string} message
+ * @param {string} socketId
  */
-function sendMessage(message) {
-  socket.emit('message', message);
+function sendMessage(message, socketId) {
+  socket.emit('message', message, socketId);
 }
 
-// handle ui
-document.querySelector('button').addEventListener('click', (ev) => {
-  createPeerConnection();
-  navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  }).then((stream) => {
-    videoElement.srcObject = stream;
-    stream.getTracks().forEach((track) => {
-      pc.addTrack(track, stream);
-    });
-  }).catch((err) => {
-    console.log(err);
-  });
+document.forms['chat-message'].addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const msg = document.querySelector('input#message').value;
+  const client = clientList.find((val) => val.socketId === ev.srcElement.parentElement.getAttribute('data-id'));
+
+  client.dataChannel.send(msg);
+  document.querySelector('div#messages').dispatchEvent(new CustomEvent('update', {detail: {msg, sender: userName}}));
+
+  const messages = JSON.parse(sessionStorage.getItem(client.socketId)) || [];
+  messages.push({sender: userName, text: msg});
+  sessionStorage.setItem(client.socketId, JSON.stringify(messages));
 });
 
-document.querySelector('input#file').addEventListener('change', (ev) => {
-  createPeerConnection();
-  videoElement.src = URL.createObjectURL(ev.srcElement.files[0]);
-  const stream = videoElement.captureStream();
-  stream.addEventListener('addtrack', (ev) => {
-    console.log(ev.track);
-    pc.addTrack(ev.track, stream);
-  });
+document.forms['connect-form'].addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  userName = document.forms['connect-form']['your-name'].value.trim();
+  const roomName = document.forms['connect-form']['room-name'].value.toLowerCase().trim();
+  createSocketConnection(userName, roomName);
 });
 
-document.querySelector('input#call').addEventListener('click', (ev) => {
-  createDataConnection();
-});
-
-document.querySelector('input#send').addEventListener('click', (ev) => {
-  const msg = document.querySelector('textarea#message').value;
-  dataChannel.send(msg);
+document.querySelector('div#messages').addEventListener('update', (ev) => {
+  const html = `
+    <li>
+      <span class="sender"><u>${ev.detail.sender}:</u></span><br>
+      <span class="message-body">${ev.detail.msg}</span>
+    </li>
+  `;
+  document.querySelector('div#messages ul').insertAdjacentHTML('beforeend', html);
 });

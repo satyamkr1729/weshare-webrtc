@@ -1,0 +1,33 @@
+div#client-list, div#chat-box{
+    max-height: 200px;
+    overflow: auto;
+    border: black 1px solid;
+    margin: 10px 0px;
+}
+
+div#client-list h5 {
+    text-align: center;
+}
+
+form#chat-message {
+    text-align: center;
+}
+
+div#messages {
+    max-height: 200px;
+    overflow: auto;
+}
+
+div#messages ul li {
+    border: black 1px solid;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+li {
+    height: 35px;
+}
+
+ul {
+    margin-top: 10px;
+}
