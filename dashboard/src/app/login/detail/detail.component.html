@@ -1,0 +1,15 @@
+<div>
+    <form class="details-form" [formGroup]="detailsForm" fxLayout="column" fxLayoutAlign="space-around center" fxLayoutGap="10px" (ngSubmit)="onSubmit()">
+        <mat-form-field fxFlex="1 1 auto" style="width: 100%;">
+            <mat-label>Your Name</mat-label>
+            <input matInput placeholder="your name" formControlName="yourName" required>
+            <mat-error *ngIf="detailsForm.hasError('required', 'yourName')">please enter your name</mat-error>
+        </mat-form-field>
+        <mat-form-field fxFlex="1 1 auto" style="width: 100%;">
+            <mat-label>Room Name</mat-label>
+            <input matInput placeholder="room name" formControlName="roomName" fxflex="1 1 100%" required>
+            <mat-error *ngIf="detailsForm.hasError('required', 'roomName')">please enter room name</mat-error>
+        </mat-form-field>
+        <button  mat-raised-button type="submit" [disabled]="!detailsForm.valid" color="primary" style="width: 50%;">Submit</button>
+    </form>
+</div>
