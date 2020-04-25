@@ -10,13 +10,13 @@ const io = require('socket.io')(server);
 const port = process.env.PORT || 8090;
 const socketDetails = {};
 
-app.use('/dashboard', express.static(__dirname + '/dashboard'));
+app.use('/dashboard', express.static(__dirname + '/dashboard/dist'));
 server.listen(port);
 
 console.log('Server listening on port ' + port);
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/dashboard/index.html');
+  res.sendFile(__dirname + '/dashboard/dist/index.html');
 });
 
 io.on('connection', (socket) => {

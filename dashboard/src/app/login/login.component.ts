@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
-import { CreateRoomComponent } from './create-room/create-room.component';
 import { DetailComponent } from './detail/detail.component';
 
 @Component({
