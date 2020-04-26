@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express();
 const process = require('process');
+const path = require('path');
 // eslint-disable-next-line new-cap
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
@@ -10,13 +11,14 @@ const io = require('socket.io')(server);
 const port = process.env.PORT || 8090;
 const socketDetails = {};
 
-app.use('/', express.static(__dirname + '/dashboard/dist/dashboard'));
+app.use('/', express.static(path.join(__dirname, '../dist/dashboard')));
 server.listen(port);
 
 console.log('Server listening on port ' + port);
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/dashboard/dist/dashboard/index.html');
+  console.log(__dirname);
+  res.sendFile(path.join(__dirname, '../dist/dashboard/index.html'));
 });
 
 io.on('connection', (socket) => {
