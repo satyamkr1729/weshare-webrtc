@@ -6,8 +6,12 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "cd dashboard/ && npm install && npm run build"
+    "build": "cd dashboard/ && npm install -g && npm run build"
   },
+  "cacheDirectories": [
+    "node_modules",
+    "dashboard/node_modules"
+  ],
   "author": "Satyam and Abhishek",
   "license": "ISC",
   "dependencies": {
