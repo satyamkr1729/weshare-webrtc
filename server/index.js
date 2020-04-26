@@ -1,5 +1,8 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable max-len */
+
+/* This file contains code for signalling server to be used with WebRTC app */
+
 const express = require('express');
 const app = express();
 const process = require('process');

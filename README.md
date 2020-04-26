@@ -1,27 +1,17 @@
-# Dashboard
+# Weshare
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.17.
+This web app aims to enable peer to peer sharing of contents using the power of WebRTC.
 
-## Development server
+WebRTC enables peer to peer sharing of contents and media thus removing the need for an intermediate server. Although for establishing connection it needs to use a signalling server and a STUN server but after that the connection is peer to peer.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+This project uses node server as a signalling server. Signalling server uses socket io to enable sending of signalling messages between peers. The signalling server can be found in server folder.
 
-## Code scaffolding
+Frontend is written in angular 8.
+Node version 12.13.x is used for signalling server.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+## Contribute
+* Clone the project and run <b>npm install</b>.
+* Open two consoles. 
+* On one console run <b>ng serve</b>.
+* On the other console run <b>npm run debug</b>
+* In the browser open url <b>https://localhost:<i>PORT</i></b> where PORT is by default <b>8090</b> if not set by your environment variable.
