@@ -27,24 +27,37 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('connection incoming');
 
-  socket.on('create or join', (detail) => {
+  socket.on('create', (detail) => {
     const clientsInRoom = io.sockets.adapter.rooms[detail.roomName];
     const numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
     if (numClients === 0) {
       socket.join(detail.roomName);
       console.log(`Client ID ${socket.id} created room ${detail.roomName}`);
-      socket.emit('created', detail.roomName, socket.id);
+      socket.emit('created', {success: true, roomName: detail.roomName, socketId: socket.id});
+      socketDetails[socket.id] = detail.userName;
     } else {
+      socket.emit('created', {success: false});
+    }
+  });
+
+  socket.on('join', (detail) => {
+    const clientsInRoom = io.sockets.adapter.rooms[detail.roomName];
+    const numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
+
+    if (numClients !== 0) {
       console.log('Client ID ' + socket.id + ' joined room ' + detail.roomName);
       const clientList = Object.keys(clientsInRoom.sockets).map((key) => {
         return Object.assign({}, {socketId: key, userName: socketDetails[key]});
       });
       console.log(clientList);
-      io.sockets.in(detail.roomName).emit('client', detail.roomName, socket.id, detail.userName);
+      io.sockets.in(detail.roomName).emit('client', {roomName: detail.roomName, socketId: socket.id, userName: detail.userName});
       socket.join(detail.roomName);
-      socket.emit('joined', detail.roomName, socket.id, clientList);
+      socket.emit('joined', {success: true, roomName: detail.roomName, socketId: socket.id, clientList});
+      socketDetails[socket.id] = detail.userName;
+    } else {
+      socket.emit('joined', {success: false});
     }
-    socketDetails[socket.id] = detail.userName;
   });
 
   socket.on('message', (message, socketId) => {
