@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "cd dashboard && npm install && ng build --aot --prod && cd ../"
+    "build": "cd dashboard/ && npm install && npm run build"
   },
   "author": "Satyam and Abhishek",
   "license": "ISC",
@@ -14,9 +14,7 @@
     "express": "^4.17.1",
     "express-static": "^1.2.6",
     "node-static": "^0.7.11",
-    "socket.io": "^2.3.0",
-    "@angular/cli": "~8.3.17",
-    "@angular/compiler-cli": "~8.2.13"
+    "socket.io": "^2.3.0"
   },
   "engines": {
     "node": "12.13.x"
