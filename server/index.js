@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
     if (numClients === 0) {
       socket.join(detail.roomName);
       console.log(`Client ID ${socket.id} created room ${detail.roomName}`);
-      socket.emit('created', {success: true, roomName: detail.roomName, socketId: socket.id});
+      socket.emit('created', {success: true, socketId: socket.id, clientList: []});
       socketDetails[socket.id] = detail.userName;
     } else {
       socket.emit('created', {success: false});
@@ -51,9 +51,9 @@ io.on('connection', (socket) => {
         return Object.assign({}, {socketId: key, userName: socketDetails[key]});
       });
       console.log(clientList);
-      io.sockets.in(detail.roomName).emit('client', {roomName: detail.roomName, socketId: socket.id, userName: detail.userName});
+      io.sockets.in(detail.roomName).emit('client', {socketId: socket.id, userName: detail.userName});
       socket.join(detail.roomName);
-      socket.emit('joined', {success: true, roomName: detail.roomName, socketId: socket.id, clientList});
+      socket.emit('joined', {success: true, socketId: socket.id, clientList});
       socketDetails[socket.id] = detail.userName;
     } else {
       socket.emit('joined', {success: false});

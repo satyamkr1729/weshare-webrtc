@@ -1,0 +1,25 @@
+<mat-drawer-container>
+    <mat-drawer mode="side" opened style="min-width: 20vw;">
+        <mat-list role="list" style="padding: 0;">
+            <div>
+                <mat-form-field style="width: 100%;">
+                    <mat-label>Search</mat-label>
+                    <input matInput type="search" placeholder="search">
+                </mat-form-field>
+                <mat-divider></mat-divider>
+            </div>
+            <div  *ngFor="let client of clientList">
+                <mat-list-item role="listitem" (click)="onClientSelect(client)">{{client.userName}}</mat-list-item>
+                <mat-divider></mat-divider>
+            </div>
+        </mat-list>
+    </mat-drawer>
+    <mat-drawer-content *ngIf="selectedClient">
+        <div>
+            <mat-card class="client-name">{{selectedClient.userName[0].toUpperCase() + selectedClient.userName.substr(1)}}</mat-card>
+            <mat-divider></mat-divider>
+        </div>
+        <div class="text-chat">
+        </div>
+    </mat-drawer-content>
+</mat-drawer-container>

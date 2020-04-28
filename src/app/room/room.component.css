@@ -1,0 +1,13 @@
+mat-drawer-container {
+    height: 91%;
+}
+
+mat-card.client-name {
+    margin: 5px 5px;
+    background-color: #424242;
+    color: white;
+    padding-left: 100px;
+    padding-right: 100px;
+    font-size: 1.1em;
+    text-align: center;
+}

@@ -15,9 +15,14 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatCardModule} from '@angular/material/card'; 
+import {MatListModule} from '@angular/material/list';
+import {MatDividerModule} from '@angular/material/divider';
 
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
+import { RoomComponent } from './room/room.component';
 
 const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secure: true} };
 
@@ -26,6 +31,7 @@ const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secur
     AppComponent,
     LoginComponent,
     DetailComponent,
+    RoomComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,11 +41,15 @@ const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secur
     FormsModule,
     FlexLayoutModule,
     MatButtonModule,
+    MatCardModule,
+    MatDividerModule,
     MatToolbarModule,
     MatFormFieldModule,
     MatInputModule,
     MatDialogModule,
+    MatListModule,
     MatSnackBarModule,
+    MatSidenavModule,
     SocketIoModule.forRoot(socketConfig)
   ],
   entryComponents: [

@@ -2,14 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import { DetailComponent } from './detail/detail.component';
 import { environment } from 'src/environments/environment';
-import { Socket } from 'ngx-socket-io';
 import { SocketHandlerService } from '../services/socket-handler.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
-export interface Details {
-  yourName: string;
-  roomName: string;
-}
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +17,8 @@ export class LoginComponent implements OnInit {
 
   constructor(private dialog: MatDialog,
     private socketHandler: SocketHandlerService,
-    private snackBar: MatSnackBar) { }
+    private snackBar: MatSnackBar,
+    private router: Router) { }
 
   ngOnInit() {
     console.log(environment.apiUrl);
@@ -41,6 +37,7 @@ export class LoginComponent implements OnInit {
         var message: string = '';
         if (response.success) {
           message = `Successfully created room ${result.roomName}`;
+          this.router.navigate(['/room', result.roomName], {state: response});
         } else {
           message = `Room name ${result.roomName} already taken`;
         }
@@ -64,6 +61,7 @@ export class LoginComponent implements OnInit {
         var message: string = '';
         if (response.success) {
           message = `Successfully joined room ${result.roomName}`;
+          this.router.navigate(['/room', result.roomName], {state: response});
         } else {
           message = `Room ${result.roomName} does not exist`;
         }
