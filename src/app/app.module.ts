@@ -4,8 +4,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms'
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LoginComponent } from './login/login.component';
-import { DetailComponent } from './login/detail/detail.component';
+import { LoginComponent } from './components/login/login.component';
+import { DetailComponent } from './components/login/detail/detail.component';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -22,7 +22,7 @@ import {MatDividerModule} from '@angular/material/divider';
 
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
-import { RoomComponent } from './room/room.component';
+import { RoomComponent } from './components/room/room.component';
 
 const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secure: true} };
 

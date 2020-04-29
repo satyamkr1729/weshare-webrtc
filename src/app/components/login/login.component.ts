@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import { DetailComponent } from './detail/detail.component';
 import { environment } from 'src/environments/environment';
-import { SocketHandlerService } from '../services/socket-handler.service';
+import { SocketHandlerService } from '../../services/socket-handler.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 

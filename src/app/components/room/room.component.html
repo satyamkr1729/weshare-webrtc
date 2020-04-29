@@ -9,17 +9,19 @@
                 <mat-divider></mat-divider>
             </div>
             <div  *ngFor="let client of clientList">
-                <mat-list-item role="listitem" (click)="onClientSelect(client)">{{client.userName}}</mat-list-item>
+                <mat-list-item role="listitem">{{client.getUserName()}}</mat-list-item>
                 <mat-divider></mat-divider>
             </div>
         </mat-list>
     </mat-drawer>
     <mat-drawer-content *ngIf="selectedClient">
-        <div>
-            <mat-card class="client-name">{{selectedClient.userName[0].toUpperCase() + selectedClient.userName.substr(1)}}</mat-card>
-            <mat-divider></mat-divider>
-        </div>
         <div class="text-chat">
+            <div *ngFor="let msg of messages">
+                <mat-card>
+                    <mat-card-title>msg.sender</mat-card-title>
+                    <mat-card-content>msg.text</mat-card-content>
+                </mat-card>
+            </div>
         </div>
     </mat-drawer-content>
 </mat-drawer-container>

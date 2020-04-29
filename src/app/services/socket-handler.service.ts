@@ -6,8 +6,8 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class SocketHandlerService {
-  message: Observable<any>;
-  client: Observable<any>;
+  private message: Observable<any>;
+  private client: Observable<any>;
   
   constructor(private socket: Socket) { 
     this.message = this.socket.fromEvent<any>('message');
@@ -30,5 +30,9 @@ export class SocketHandlerService {
 
   getClients(): Observable<any> {
     return this.client;
+  }
+
+  sendMessage(message, socketId): void {
+    this.socket.emit('message', message, socketId);
   }
 }

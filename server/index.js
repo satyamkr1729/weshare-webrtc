@@ -62,7 +62,7 @@ io.on('connection', (socket) => {
 
   socket.on('message', (message, socketId) => {
     console.log(message);
-    socket.to(socketId).emit('message', message, socket.id);
+    socket.to(socketId).emit('message', {message, socketId: socket.id});
     // socket.broadcast.emit('message', message);
   });
 });
