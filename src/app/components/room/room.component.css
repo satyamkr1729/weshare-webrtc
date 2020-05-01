@@ -11,3 +11,35 @@ mat-card.client-name {
     font-size: 1.1em;
     text-align: center;
 }
+
+div.text-chat {
+    overflow-y: auto;
+}
+
+div.msg-row {
+    margin: 10px 10px;
+    word-wrap: break-word;
+}
+
+div.msg-sent mat-card {
+    background-color: #7b1fa2;
+}
+
+div.msg-container {
+    width: fit-content;
+    max-width: 80%;
+}
+
+div.msg-container div.sender-name {
+    font-size: 1em;
+    color: #0cd9f4;
+}
+
+div.msg-recieved div.msg-container div.sender-name {
+    margin-left: 5px;
+}
+
+div.msg-sent div.msg-container div.sender-name {
+    text-align: right;
+    margin-right: 5px;
+}

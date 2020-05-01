@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SocketHandlerService } from '../../services/socket-handler.service';
 import { Client } from 'src/app/utils/client';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-room',
@@ -11,11 +12,15 @@ import { Client } from 'src/app/utils/client';
 
 export class RoomComponent implements OnInit {
   socketId: string;
+  myName: string;
   roomName: string;
   clientList: Client[];
   selectedClient: Client;
-  messages: any;
+  messages: any[];
 
+  msgForm = new FormGroup({
+    msg: new FormControl(''),
+  });
   constructor(private activatedRoute: ActivatedRoute,
     private router: Router,
     private socketHandler: SocketHandlerService) { }
@@ -46,7 +51,7 @@ export class RoomComponent implements OnInit {
 
     this.socketHandler.getClients().subscribe({
       next: (client) => {
-        this.clientList.push(new Client(this.socketHandler, client.socketId, client.userName));
+        this.clientList.push(new Client(this.socketHandler, client.socketId, client.userName, this.onMsgRecieved.bind(this)));
       },
     });
   }
@@ -59,7 +64,9 @@ export class RoomComponent implements OnInit {
         } else {
           this.roomName = obj.get('roomid'),
           this.socketId = window.history.state.socketId,
-          this.clientList = window.history.state.clientList.map((client) =>  new Client(this.socketHandler, client.socketId, client.userName));
+          this.myName = window.history.state.myName,
+          this.messages = [];
+          this.clientList = window.history.state.clientList.map((client) =>  new Client(this.socketHandler, client.socketId, client.userName, this.onMsgRecieved.bind(this)));
           this.initializeSocketMessageListener();
           this.connectAllClients();
         }
@@ -81,5 +88,16 @@ export class RoomComponent implements OnInit {
     }
   }
 
-  
+  onMsgSend(ev: Event): void {
+    const msg = this.msgForm.get('msg').value;
+    this.messages.push({sender: this.myName, text: msg});
+    this.msgForm.get('msg').setValue('');
+    for(let client of this.clientList) {
+      client.sendMessage(msg);
+    }
+  }
+
+  onMsgRecieved(sender: string, text: string): void {
+    this.messages.push({sender, text});
+  }
 }

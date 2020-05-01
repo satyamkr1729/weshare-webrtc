@@ -6,18 +6,21 @@ export class Client {
   private pc: RTCPeerConnection;
   private dataChannel: RTCDataChannel;
   private connected: Boolean;
+  private msgPrinter: (sender: string, text: string) => void;
+
   private pcConfig = {
     'iceServers': [{
       urls: 'stun:stun.stunprotocol.org',
     }],
   };
 
-  constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string) {
+  constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string, msgPrinter: (sender: string, text: string) => void) {
     this.socketId = socketId;
     this.userName = userName;
     this.connected = false;
     this.pc = null;
     this.dataChannel = null;
+    this.msgPrinter = msgPrinter;
   }
 
   private createPeerConnection(): void {
@@ -79,7 +82,7 @@ export class Client {
   }
 
   private handleMessage(ev: any): void {
-    console.log(ev);
+    this.msgPrinter(this.userName, ev.data);
   }
 
   private handleDataChannel(ev: any): void {
@@ -122,7 +125,6 @@ export class Client {
   }
 
   handleAnswer(msg: any): void {
-    alert('Connection Complete!!');
     this.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
     this.connected = true;
   }
@@ -137,6 +139,11 @@ export class Client {
 
   isConnected(): Boolean {
     return this.connected;
+  }
+
+  sendMessage(msg): void {
+    if (this.dataChannel)
+      this.dataChannel.send(msg);
   }
 }
 

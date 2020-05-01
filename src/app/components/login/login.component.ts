@@ -32,19 +32,22 @@ export class LoginComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      result.roomName = result.roomName.toLowerCase();
-      this.socketHandler.createRoom(result.yourName, result.roomName).then((response) => {
-        var message: string = '';
-        if (response.success) {
-          message = `Successfully created room ${result.roomName}`;
-          this.router.navigate(['/room', result.roomName], {state: response});
-        } else {
-          message = `Room name ${result.roomName} already taken`;
-        }
-        this.snackBar.open(message, 'OK', {
-          duration: 3000,
+      if (result.roomName && result.yourName) {
+        result.roomName = result.roomName.toLowerCase();
+        this.socketHandler.createRoom(result.yourName, result.roomName).then((response) => {
+          var message: string = '';
+          if (response.success) {
+            message = `Successfully created room ${result.roomName}`;
+            response.myName = result.yourName;
+            this.router.navigate(['/room', result.roomName], {state: response});
+          } else {
+            message = `Room name ${result.roomName} already taken`;
+          }
+          this.snackBar.open(message, 'OK', {
+            duration: 3000,
+          });
         });
-      });
+      }
     });
   }
 
@@ -56,19 +59,22 @@ export class LoginComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      result.roomName = result.roomName.toLowerCase();
-      this.socketHandler.joinRoom(result.yourName, result.roomName).then((response) => {
-        var message: string = '';
-        if (response.success) {
-          message = `Successfully joined room ${result.roomName}`;
-          this.router.navigate(['/room', result.roomName], {state: response});
-        } else {
-          message = `Room ${result.roomName} does not exist`;
-        }
-        this.snackBar.open(message, 'OK', {
-          duration: 3000,
+      if (result.roomName && result.yourName) {
+        result.roomName = result.roomName.toLowerCase();
+        this.socketHandler.joinRoom(result.yourName, result.roomName).then((response) => {
+          var message: string = '';
+          if (response.success) {
+            message = `Successfully joined room ${result.roomName}`;
+            response.myName = result.yourName;
+            this.router.navigate(['/room', result.roomName], {state: response});
+          } else {
+            message = `Room ${result.roomName} does not exist`;
+          }
+          this.snackBar.open(message, 'OK', {
+            duration: 3000,
+          });
         });
-      });
+      }
     });
   }
 }

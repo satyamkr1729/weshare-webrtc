@@ -1,26 +1,42 @@
 <mat-drawer-container>
     <mat-drawer mode="side" opened style="min-width: 20vw;">
         <mat-list role="list" style="padding: 0;">
-            <div>
-                <mat-form-field style="width: 100%;">
-                    <mat-label>Search</mat-label>
-                    <input matInput type="search" placeholder="search">
-                </mat-form-field>
-                <mat-divider></mat-divider>
-            </div>
             <div  *ngFor="let client of clientList">
                 <mat-list-item role="listitem">{{client.getUserName()}}</mat-list-item>
                 <mat-divider></mat-divider>
             </div>
         </mat-list>
     </mat-drawer>
-    <mat-drawer-content *ngIf="selectedClient">
-        <div class="text-chat">
-            <div *ngFor="let msg of messages">
-                <mat-card>
-                    <mat-card-title>msg.sender</mat-card-title>
-                    <mat-card-content>msg.text</mat-card-content>
-                </mat-card>
+    <mat-drawer-content>
+        <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
+            <div class="text-chat">
+                <div *ngFor="let msg of messages">
+                    <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName">
+                        <div class="msg-container" fxLayout="column">
+                            <div class="sender-name">You</div>
+                            <mat-card>
+                                <mat-card-content>{{msg.text}}</mat-card-content>
+                            </mat-card>
+                        </div>
+                    </div>
+                    <div class="msg-row msg-received" fxLayout="row" *ngIf="msg.sender != this.myName">
+                        <div class="msg-container" fxLayout="column">
+                            <div class="sender-name">{{msg.sender}}</div>
+                            <mat-card>
+                                <mat-card-content>{{msg.text}}</mat-card-content>
+                            </mat-card>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="send-msg-form" style="margin: 10px;">
+                <form [formGroup]="msgForm" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="10px" (ngSubmit)="onMsgSend()">
+                    <mat-form-field fxFlex="1 1 auto">
+                        <mat-label>Message</mat-label>
+                        <input matInput placeholder="Your message" formControlName="msg" autocomplete="off">
+                    </mat-form-field>
+                    <button  mat-raised-button type="submit" color="primary">Submit</button>
+                </form>
             </div>
         </div>
     </mat-drawer-content>
