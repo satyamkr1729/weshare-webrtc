@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SocketHandlerService } from '../../services/socket-handler.service';
 import { Client } from 'src/app/utils/client';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { fromEvent } from 'rxjs';
 
 @Component({
   selector: 'app-room',
@@ -28,6 +29,7 @@ export class RoomComponent implements OnInit {
   private connectAllClients(): void {
     for(let client of this.clientList) {
       client.connect();
+      client.getDataChannel().onmessage = (ev) => this.msgReceivedHandler(client.getUserName(), ev.data);
     }
   }
 
@@ -38,6 +40,11 @@ export class RoomComponent implements OnInit {
         switch(obj.message.type) {
           case 'offer':
             client.handleOffer(obj.message);
+            client.getPc().addEventListener('datachannel', (ev) => {
+              ev.channel.onmessage = (msgEvent) => {
+                this.msgReceivedHandler(client.getUserName(), msgEvent.data);
+              }
+            });
             break;
           case 'candidate':
             client.handleSentCandidate(obj.message);
@@ -51,7 +58,7 @@ export class RoomComponent implements OnInit {
 
     this.socketHandler.getClients().subscribe({
       next: (client) => {
-        this.clientList.push(new Client(this.socketHandler, client.socketId, client.userName, this.onMsgRecieved.bind(this)));
+        this.clientList.push(new Client(this.socketHandler, client.socketId, client.userName));
       },
     });
   }
@@ -66,7 +73,7 @@ export class RoomComponent implements OnInit {
           this.socketId = window.history.state.socketId,
           this.myName = window.history.state.myName,
           this.messages = [];
-          this.clientList = window.history.state.clientList.map((client) =>  new Client(this.socketHandler, client.socketId, client.userName, this.onMsgRecieved.bind(this)));
+          this.clientList = window.history.state.clientList.map((client) =>  new Client(this.socketHandler, client.socketId, client.userName));
           this.initializeSocketMessageListener();
           this.connectAllClients();
         }
@@ -97,8 +104,8 @@ export class RoomComponent implements OnInit {
     }
   }
 
-  onMsgRecieved(sender: string, text: string): void {
-    console.log(sender);
+  msgReceivedHandler(sender: string, text: string): void {
     this.messages.push({sender, text});
+    console.log(this.messages);
   }
 }

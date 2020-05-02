@@ -6,7 +6,6 @@ export class Client {
   private pc: RTCPeerConnection;
   private dataChannel: RTCDataChannel;
   private connected: Boolean;
-  private msgPrinter: (sender: string, text: string) => void;
 
   private pcConfig = {
     'iceServers': [{
@@ -14,13 +13,12 @@ export class Client {
     }],
   };
 
-  constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string, msgPrinter: (sender: string, text: string) => void) {
+  constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string) {
     this.socketId = socketId;
     this.userName = userName;
     this.connected = false;
     this.pc = null;
     this.dataChannel = null;
-    this.msgPrinter = msgPrinter;
   }
 
   private createPeerConnection(): void {
@@ -79,16 +77,12 @@ export class Client {
   private intializeDataChanneListeners(): void {
     this.dataChannel.onclose = this.handleDataChannelStateChange.bind(this);
     this.dataChannel.onopen = this.handleDataChannelStateChange.bind(this);
-    this.dataChannel.onmessage = this.handleMessage.bind(this);
+    //this.dataChannel.onmessage = this.handleMessage.bind(this);
+    
   }
 
   private handleDataChannelStateChange(ev: any): void {
     console.log(ev);
-  }
-
-  private handleMessage(ev: any): void {
-    console.log(ev);
-    this.msgPrinter(this.userName, ev.data);
   }
 
   private handleDataChannel(ev: any): void {
@@ -150,6 +144,14 @@ export class Client {
   sendMessage(msg): void {
     if (this.dataChannel)
       this.dataChannel.send(msg);
+  }
+
+  getDataChannel(): RTCDataChannel {
+    return this.dataChannel;
+  }
+
+  getPc(): RTCPeerConnection {
+    return this.pc;
   }
 }
 

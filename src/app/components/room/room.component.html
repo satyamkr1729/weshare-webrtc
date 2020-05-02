@@ -11,7 +11,7 @@
         <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
             <div class="text-chat">
                 <div *ngFor="let msg of messages">
-                    <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName">
+                    <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName; else received">
                         <div class="msg-container" fxLayout="column">
                             <div class="sender-name">You</div>
                             <mat-card>
@@ -19,14 +19,16 @@
                             </mat-card>
                         </div>
                     </div>
-                    <div class="msg-row msg-received" fxLayout="row" *ngIf="msg.sender != this.myName">
-                        <div class="msg-container" fxLayout="column">
-                            <div class="sender-name">{{msg.sender}}</div>
-                            <mat-card>
-                                <mat-card-content>{{msg.text}}</mat-card-content>
-                            </mat-card>
+                    <ng-template #received>
+                        <div class="msg-row msg-received" fxLayout="row">
+                            <div class="msg-container" fxLayout="column">
+                                <div class="sender-name">{{msg.sender}}</div>
+                                <mat-card>
+                                    <mat-card-content>{{msg.text}}</mat-card-content>
+                                </mat-card>
+                            </div>
                         </div>
-                    </div>
+                    </ng-template>
                 </div>
             </div>
             <div class="send-msg-form" style="margin: 10px;">
