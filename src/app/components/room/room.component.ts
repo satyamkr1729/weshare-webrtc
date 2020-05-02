@@ -98,6 +98,7 @@ export class RoomComponent implements OnInit {
   }
 
   onMsgRecieved(sender: string, text: string): void {
+    console.log(sender);
     this.messages.push({sender, text});
   }
 }
