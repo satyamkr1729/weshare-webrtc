@@ -27,6 +27,7 @@ export class Client {
     try {
       this.pc = new RTCPeerConnection(this.pcConfig);
       this.pc.onicecandidate = this.handleIceCandidate.bind(this);
+      this.pc.oniceconnectionstatechange = this.handleIceCandidateStateChange.bind(this);
       this.pc.ontrack = this.handleTrackAdded.bind(this);
       this.pc.onnegotiationneeded = this.handleNegotiation.bind(this);
       console.log('created Rtc peer connection');
@@ -46,6 +47,10 @@ export class Client {
     } else {
       console.log('End of candidates');
     }
+  }
+
+  private handleIceCandidateStateChange(ev: any): void {
+    console.log(ev)
   }
 
   private handleTrackAdded(): void {
@@ -82,6 +87,7 @@ export class Client {
   }
 
   private handleMessage(ev: any): void {
+    console.log(ev);
     this.msgPrinter(this.userName, ev.data);
   }
 

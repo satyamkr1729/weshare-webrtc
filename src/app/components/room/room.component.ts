@@ -88,7 +88,7 @@ export class RoomComponent implements OnInit {
     }
   }
 
-  onMsgSend(ev: Event): void {
+  onMsgSend(): void {
     const msg = this.msgForm.get('msg').value;
     this.messages.push({sender: this.myName, text: msg});
     this.msgForm.get('msg').setValue('');
