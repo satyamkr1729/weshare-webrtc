@@ -106,6 +106,8 @@ export class RoomComponent implements OnInit {
 
   msgReceivedHandler(sender: string, text: string): void {
     this.messages.push({sender, text});
+    document.body.click();
+    document.getElementById('user-msg').click();
     console.log(this.messages);
   }
 }

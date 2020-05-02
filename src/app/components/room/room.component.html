@@ -9,7 +9,7 @@
     </mat-drawer>
     <mat-drawer-content>
         <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
-            <div class="text-chat">
+            <div class="text-chat" #scrollMe [scrollTop]="scrollMe.scrollHeight">
                 <div *ngFor="let msg of messages">
                     <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName; else received">
                         <div class="msg-container" fxLayout="column">
@@ -35,7 +35,7 @@
                 <form [formGroup]="msgForm" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="10px" (ngSubmit)="onMsgSend()">
                     <mat-form-field fxFlex="1 1 auto">
                         <mat-label>Message</mat-label>
-                        <input matInput placeholder="Your message" formControlName="msg" autocomplete="off">
+                        <input matInput id="user-msg" placeholder="Your message" formControlName="msg" autocomplete="off">
                     </mat-form-field>
                     <button  mat-raised-button type="submit" color="primary">Submit</button>
                 </form>

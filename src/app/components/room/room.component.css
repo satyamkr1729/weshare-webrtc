@@ -35,7 +35,7 @@ div.msg-container div.sender-name {
     color: #0cd9f4;
 }
 
-div.msg-recieved div.msg-container div.sender-name {
+div.msg-received div.msg-container div.sender-name {
     margin-left: 5px;
 }
 
