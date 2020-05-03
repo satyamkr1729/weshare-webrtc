@@ -30,6 +30,10 @@ export class RoomComponent implements OnInit {
     for(let client of this.clientList) {
       client.connect();
       client.getDataChannel().onmessage = (ev) => this.msgReceivedHandler(client.getUserName(), ev.data);
+      client.getPc().ontrack = (ev) => {
+        (<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
+        (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
+      };
     }
   }
 
@@ -40,11 +44,17 @@ export class RoomComponent implements OnInit {
         switch(obj.message.type) {
           case 'offer':
             client.handleOffer(obj.message);
-            client.getPc().addEventListener('datachannel', (ev) => {
-              ev.channel.onmessage = (msgEvent) => {
-                this.msgReceivedHandler(client.getUserName(), msgEvent.data);
-              }
-            });
+            client.getPc().ontrack = (ev) => {
+              (<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
+              (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
+            };
+            if (client.getDataChannel() === null) {
+              client.getPc().addEventListener('datachannel', (ev) => {
+                ev.channel.onmessage = (msgEvent) => {
+                  this.msgReceivedHandler(client.getUserName(), msgEvent.data);
+                }
+              });
+            }
             break;
           case 'candidate':
             client.handleSentCandidate(obj.message);
@@ -80,19 +90,6 @@ export class RoomComponent implements OnInit {
       },
       complete: () => console.log('complete')
     });
-
-    
-  }
-
-  onClientSelect(client: Client): void {
-    this.selectedClient = client;
-    if (!client.isConnected()) {
-      client.connect();
-    }
-    let chat = JSON.parse(sessionStorage.getItem('weshare'));
-    if (chat && chat[client.getSocketId()]) {
-      this.messages = chat[client.getSocketId()];
-    }
   }
 
   onMsgSend(): void {
@@ -106,8 +103,27 @@ export class RoomComponent implements OnInit {
 
   msgReceivedHandler(sender: string, text: string): void {
     this.messages.push({sender, text});
+    (<HTMLElement>document.querySelector('input#user-msg')).click();
     document.body.click();
-    document.getElementById('user-msg').click();
     console.log(this.messages);
+  }
+
+  videoCall(client: Client): void {
+    (<HTMLElement>document.querySelector('div#video-container')).style.display = 'block';
+    navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    }).then((stream) => {
+      (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = stream;
+      stream.getTracks().forEach((track) => {
+        client.getPc().addTrack(track, stream);
+      });
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+
+  onCloseVideo(): void {
+    (<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
   }
 }

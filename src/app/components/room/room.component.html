@@ -1,8 +1,11 @@
+<div id="video-container">
+    <video autoplay></video>
+</div>
 <mat-drawer-container>
     <mat-drawer mode="side" opened style="min-width: 20vw;">
         <mat-list role="list" style="padding: 0;">
             <div  *ngFor="let client of clientList">
-                <mat-list-item role="listitem">{{client.getUserName()}}</mat-list-item>
+                <mat-list-item role="listitem" (click)="videoCall(client)">{{client.getUserName()}}</mat-list-item>
                 <mat-divider></mat-divider>
             </div>
         </mat-list>

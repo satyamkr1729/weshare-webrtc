@@ -96,24 +96,47 @@ export class Client {
   }
 
   handleOffer(msg): void {
-    this.createPeerConnection();
+    const desc = new RTCSessionDescription(msg.sdp);
+    if (this.pc === null)
+      this.createPeerConnection();
     if (!this.connected) {
       this.pc.ondatachannel = this.handleDataChannel.bind(this);
+      this.pc.setRemoteDescription(desc).then(() => {
+        return this.pc.createAnswer();
+      }).then((answer) => {
+        return this.pc.setLocalDescription(answer);
+      }).then(() => {
+        this.connected = true;
+        this.socketHandler.sendMessage({
+          type: 'answer',
+          sdp: this.pc.localDescription,
+        }, this.socketId);
+      }).catch((err) => {
+        console.log(err);
+      });
+    } else {
+      this.pc.setRemoteDescription(desc).then(() => {
+        return navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true
+        });
+      }).then((stream) => {
+        stream.getTracks().forEach((track) => {
+          this.pc.addTrack(track, stream);
+        });
+      }).then(() => {
+        return this.pc.createAnswer();
+      }).then((answer) => {
+        return this.pc.setLocalDescription(answer);
+      }).then(() => {
+        this.socketHandler.sendMessage({
+          type: 'answer',
+          sdp: this.pc.localDescription,
+        }, this.socketId);
+      }).catch((err) => {
+        console.log(err);
+      });
     }
-    const desc = new RTCSessionDescription(msg.sdp);
-    this.pc.setRemoteDescription(desc).then(() => {
-      return this.pc.createAnswer();
-    }).then((answer) => {
-      return this.pc.setLocalDescription(answer);
-    }).then(() => {
-      this.connected = true;
-      this.socketHandler.sendMessage({
-        type: 'answer',
-        sdp: this.pc.localDescription,
-      }, this.socketId);
-    }).catch((err) => {
-      console.log(err);
-    });
   }
 
   handleSentCandidate(msg: any): void {

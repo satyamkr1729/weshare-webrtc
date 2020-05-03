@@ -24,7 +24,7 @@ import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
 import { RoomComponent } from './components/room/room.component';
 
-const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secure: true} };
+const socketConfig: SocketIoConfig = { url: environment.apiUrl, options: {secure: true} };
 
 @NgModule({
   declarations: [
