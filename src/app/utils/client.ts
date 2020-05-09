@@ -6,7 +6,10 @@ export class Client {
   private pc: RTCPeerConnection;
   private dataChannel: RTCDataChannel;
   private connected: Boolean;
-
+  private videoCalling: Boolean;
+  private audioCalling: Boolean;
+  private streaming: Boolean;
+  
   private pcConfig = {
     'iceServers': [{
       urls: 'stun:stun.stunprotocol.org',
@@ -17,8 +20,11 @@ export class Client {
     this.socketId = socketId;
     this.userName = userName;
     this.connected = false;
-    this.pc = null;
+    this.createPeerConnection();
     this.dataChannel = null;
+    this.videoCalling = false;
+    this.audioCalling = false;
+    this.streaming = false;
   }
 
   private createPeerConnection(): void {
@@ -26,7 +32,6 @@ export class Client {
       this.pc = new RTCPeerConnection(this.pcConfig);
       this.pc.onicecandidate = this.handleIceCandidate.bind(this);
       this.pc.oniceconnectionstatechange = this.handleIceCandidateStateChange.bind(this);
-      this.pc.ontrack = this.handleTrackAdded.bind(this);
       this.pc.onnegotiationneeded = this.handleNegotiation.bind(this);
       console.log('created Rtc peer connection');
     } catch (err) {
@@ -51,19 +56,22 @@ export class Client {
     console.log(ev)
   }
 
-  private handleTrackAdded(): void {
-
-  }
-
   private handleNegotiation(): void {
     console.log(this.pc);
     this.pc.createOffer().then((offer) => {
       return this.pc.setLocalDescription(offer);
     }).then(() => {
-      this.socketHandler.sendMessage({
-        type: 'offer',
+      const msg = {
+        type: null,
         sdp: this.pc.localDescription,
-      }, this.socketId);
+      };
+      if (this.videoCalling)
+        msg.type = 'video-offer';
+      else if (this.audioCalling) 
+        msg.type = 'audio-offer';
+      else
+        msg.type = 'data-offer';
+      this.socketHandler.sendMessage(msg, this.socketId);
     }).catch((err) => {
       console.log(err);
     });
@@ -90,53 +98,43 @@ export class Client {
     this.intializeDataChanneListeners();
   }
 
+  private createAndSendAnswer(): void {
+    this.pc.createAnswer().then((answer) => {
+      return this.pc.setLocalDescription(answer);
+    }).then(() => {
+      this.socketHandler.sendMessage({
+        type: 'answer',
+        sdp: this.pc.localDescription,
+      }, this.socketId);
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+
   connect(): void {
-    this.createPeerConnection();
     this.createDataChannel();
   }
 
-  handleOffer(msg): void {
+  handleDataOffer(msg): void {
     const desc = new RTCSessionDescription(msg.sdp);
-    if (this.pc === null)
-      this.createPeerConnection();
-    if (!this.connected) {
+    if (!this.dataChannel) {
       this.pc.ondatachannel = this.handleDataChannel.bind(this);
-      this.pc.setRemoteDescription(desc).then(() => {
-        return this.pc.createAnswer();
-      }).then((answer) => {
-        return this.pc.setLocalDescription(answer);
-      }).then(() => {
-        this.connected = true;
-        this.socketHandler.sendMessage({
-          type: 'answer',
-          sdp: this.pc.localDescription,
-        }, this.socketId);
-      }).catch((err) => {
-        console.log(err);
-      });
-    } else {
-      this.pc.setRemoteDescription(desc).then(() => {
-        return navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true
-        });
-      }).then((stream) => {
-        stream.getTracks().forEach((track) => {
-          this.pc.addTrack(track, stream);
-        });
-      }).then(() => {
-        return this.pc.createAnswer();
-      }).then((answer) => {
-        return this.pc.setLocalDescription(answer);
-      }).then(() => {
-        this.socketHandler.sendMessage({
-          type: 'answer',
-          sdp: this.pc.localDescription,
-        }, this.socketId);
-      }).catch((err) => {
-        console.log(err);
-      });
     }
+    this.pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
+  }
+        
+  handleCallOffer(msg): void {
+    const desc = new RTCSessionDescription(msg.sdp);
+    this.pc.setRemoteDescription(desc).then(() => {
+      return navigator.mediaDevices.getUserMedia({
+        audio: Boolean(this.videoCalling || this.audioCalling),
+        video: Boolean(this.videoCalling)
+      });
+    }).then((stream) => {
+      stream.getTracks().forEach((track) => {
+        this.pc.addTrack(track, stream);
+      });
+    }).then(this.createAndSendAnswer.bind(this));
   }
 
   handleSentCandidate(msg: any): void {
@@ -175,6 +173,22 @@ export class Client {
 
   getPc(): RTCPeerConnection {
     return this.pc;
+  }
+ 
+  startVideoCall(): void {
+    this.videoCalling = true;
+  }
+
+  endVideoCall(): void {
+    this.videoCalling = false;
+  }
+
+  startAudioCall(): void {
+    this.audioCalling = true;
+  }
+
+  endAudioCall(): void {
+    this.audioCalling = false;
   }
 }
 
