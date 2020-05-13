@@ -40,7 +40,7 @@ export class RoomComponent implements OnInit {
       client.connect();
       client.getDataChannel().onmessage = (ev) => this.msgReceivedHandler(client, ev.data);
       client.getPc().ontrack = (ev) => {
-        (<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
+        //(<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
         (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
       };
     }
@@ -68,7 +68,7 @@ export class RoomComponent implements OnInit {
               console.log(err);
               this.handleGetUserMediaErrors(err, client);
             }).then(() => {
-              return client.handleCallOffer(obj.message);
+              return client.handleCallOffer();
             }).then(() => {
               this.activeCalledClient = client;
             }).catch((err) => {
@@ -93,7 +93,7 @@ export class RoomComponent implements OnInit {
         client = new Client(this.socketHandler, client.socketId, client.userName);
         this.clientList.push(client);
         client.getPc().ontrack = (ev) => {
-          (<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
+          //(<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
         };
         client.getPc().addEventListener('datachannel', (ev) => {
@@ -168,9 +168,7 @@ export class RoomComponent implements OnInit {
         break;
       
       case 'call-accepted': 
-        client.getLocalStream().getTracks().forEach((track) => {
-          client.getPc().addTrack(track, client.getLocalStream());
-        });
+        client.addTracksToPc();
         break;
       
       case 'call-rejected':
@@ -178,7 +176,7 @@ export class RoomComponent implements OnInit {
           this.activeCalledClient = null;
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
           client.endCall(); 
-          (<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
+          //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
           this.notifier.open('Call Rejected!!', 'OK', {
             duration: 3000,
           });
@@ -201,12 +199,12 @@ export class RoomComponent implements OnInit {
       hasBackdrop: true,
     })
     this.matDialogRef.afterClosed().subscribe((result) => {
-      if (result === 'video') {
+      if (result === 'video' || result === 'audio') {
         this.activeCalledClient = client;
-        (<HTMLElement>document.querySelector('div#video-container')).style.display = 'block';
-        client.startCall('video').then((stream) => {
+        //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'block';
+        client.startCall(result).then((stream) => {
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = stream;
-          client.sendMessage(JSON.stringify({type: 'call', mode: 'video'}));
+          client.sendMessage(JSON.stringify({type: 'call', mode: result}));
           /* stream.getTracks().forEach((track) => {
             client.getPc().addTrack(track, stream);
           });*/
@@ -244,12 +242,12 @@ export class RoomComponent implements OnInit {
   onCallTerminate(): void {
     this.activeCalledClient.sendMessage(JSON.stringify({type: 'call-end'}));
     this.endCurrentCall();
-    this.activeCalledClient = null;
   }
 
   private endCurrentCall(): void {
-    (<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
+    //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
     (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
     this.activeCalledClient.endCall();
+    this.activeCalledClient = null;
   }
 }

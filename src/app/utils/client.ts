@@ -125,13 +125,16 @@ export class Client {
     return this.pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
   }
         
-  handleCallOffer(msg): Promise<any> {
-    console.log('handle call' + msg);
-    const desc = new RTCSessionDescription(msg.sdp);
+  handleCallOffer(): Promise<any> {
+    console.log('handle call');
+    this.addTracksToPc(); 
+    return this.createAndSendAnswer();
+  }
+
+  addTracksToPc(): void {
     for (let track of this.localStream.getTracks()) {
       this.pc.addTrack(track, this.localStream);
     };
-    return this.createAndSendAnswer();
   }
 
   handleSentCandidate(msg: any): void {

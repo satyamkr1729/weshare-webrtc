@@ -1,5 +1,7 @@
-<div id="video-container">
-    <video autoplay></video>
+<div id="video-container" fxLayout="column" fxLayoutAlign="space-evenly center" *ngIf="activeCalledClient">
+    <h2 id="caller-name" style="color: white;">{{activeCalledClient.getUserName()}}</h2>
+    <video autoplay [hidden]="activeCalledClient.getCurrentCallMode() !== 'video'"></video>
+    <img src="assets/caller.png" [hidden]="activeCalledClient.getCurrentCallMode() === 'video'">
     <button mat-raised-button (click)="onCallTerminate()" color="primary">End</button>
 </div>
 <mat-drawer-container>

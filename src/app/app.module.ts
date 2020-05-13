@@ -26,7 +26,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
 
-const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secure: true} };
+const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.com/' , options: {secure: true} };
 
 @NgModule({
   declarations: [
