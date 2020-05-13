@@ -9,6 +9,7 @@ export class Client {
   private videoCalling: Boolean;
   private audioCalling: Boolean;
   private streaming: Boolean;
+  private localStream: MediaStream;
   
   private pcConfig = {
     'iceServers': [{
@@ -25,6 +26,7 @@ export class Client {
     this.videoCalling = false;
     this.audioCalling = false;
     this.streaming = false;
+    this.localStream = null;
   }
 
   private createPeerConnection(): void {
@@ -98,8 +100,8 @@ export class Client {
     this.intializeDataChanneListeners();
   }
 
-  private createAndSendAnswer(): void {
-    this.pc.createAnswer().then((answer) => {
+  private createAndSendAnswer(): Promise<any> {
+    return this.pc.createAnswer().then((answer) => {
       return this.pc.setLocalDescription(answer);
     }).then(() => {
       this.socketHandler.sendMessage({
@@ -115,26 +117,21 @@ export class Client {
     this.createDataChannel();
   }
 
-  handleDataOffer(msg): void {
+  handleDataOffer(msg): Promise<any> {
     const desc = new RTCSessionDescription(msg.sdp);
     if (!this.dataChannel) {
       this.pc.ondatachannel = this.handleDataChannel.bind(this);
     }
-    this.pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
+    return this.pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
   }
         
-  handleCallOffer(msg): void {
+  handleCallOffer(msg): Promise<any> {
+    console.log('handle call' + msg);
     const desc = new RTCSessionDescription(msg.sdp);
-    this.pc.setRemoteDescription(desc).then(() => {
-      return navigator.mediaDevices.getUserMedia({
-        audio: Boolean(this.videoCalling || this.audioCalling),
-        video: Boolean(this.videoCalling)
-      });
-    }).then((stream) => {
-      stream.getTracks().forEach((track) => {
-        this.pc.addTrack(track, stream);
-      });
-    }).then(this.createAndSendAnswer.bind(this));
+    for (let track of this.localStream.getTracks()) {
+      this.pc.addTrack(track, this.localStream);
+    };
+    return this.createAndSendAnswer();
   }
 
   handleSentCandidate(msg: any): void {
@@ -142,7 +139,7 @@ export class Client {
       sdpMLineIndex: msg.label,
       candidate: msg.candidate,
     });
-    this.pc.addIceCandidate(candidate).catch((err) => console.log(candidate));
+    this.pc.addIceCandidate(candidate).catch((err) => console.log(err));
   }
 
   handleAnswer(msg: any): void {
@@ -175,20 +172,52 @@ export class Client {
     return this.pc;
   }
  
-  startVideoCall(): void {
-    this.videoCalling = true;
+  startCall(mode: string): Promise<any> {
+    console.log(mode);
+    if (mode === 'video')
+      this.videoCalling = true;
+    else if (mode === 'audio')
+      this.audioCalling = true;
+
+    return navigator.mediaDevices.getUserMedia({
+      audio: <boolean>(this.audioCalling || this.videoCalling),
+      video: <boolean>this.videoCalling,
+    }).then((stream) => {
+      this.localStream = stream;
+      return stream;
+    });
   }
 
-  endVideoCall(): void {
-    this.videoCalling = false;
-  }
-
-  startAudioCall(): void {
-    this.audioCalling = true;
-  }
-
-  endAudioCall(): void {
+  endCall(): void {
+    console.log('end');
     this.audioCalling = false;
+    this.videoCalling = false;
+    if (this.localStream) {
+      for(let sender of this.pc.getSenders()) {
+        this.pc.removeTrack(sender);
+      }
+      for(let track of this.localStream.getTracks()) {
+        track.stop();
+      }
+    }
+    this.localStream = null;
+  }
+
+  isCalling(): Boolean {
+    return this.videoCalling || this.audioCalling;
+  }
+
+  getCurrentCallMode(): string {
+    if (this.videoCalling)
+      return 'video';
+    else if (this.audioCalling)
+      return 'audio';
+    else
+      return 'chat';
+  }
+
+  getLocalStream(): MediaStream {
+    return this.localStream;
   }
 }
 

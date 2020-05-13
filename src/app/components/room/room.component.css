@@ -59,5 +59,6 @@ div#video-container {
 div#video-container video {
     margin-top: 10vh;
     height: 60vh;
+    width: 100vw;
 }
 

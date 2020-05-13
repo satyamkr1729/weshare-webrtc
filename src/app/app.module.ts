@@ -8,6 +8,7 @@ import { LoginComponent } from './components/login/login.component';
 import { DetailComponent } from './components/login/detail/detail.component';
 import { RoomComponent } from './components/room/room.component';
 import { CallModeSelectorComponent } from './components/room/call-mode-selector/call-mode-selector.component';
+import { CallAnswerComponent } from './components/room/call-answer/call-answer.component';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -25,7 +26,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
 
-const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.com/' , options: {secure: true} };
+const socketConfig: SocketIoConfig = { url: environment.apiUrl , options: {secure: true} };
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
     DetailComponent,
     RoomComponent,
     CallModeSelectorComponent,
+    CallAnswerComponent,
   ],
   imports: [
     BrowserModule,
@@ -57,6 +59,7 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
   entryComponents: [
     DetailComponent,
     CallModeSelectorComponent,
+    CallAnswerComponent,
   ],
   providers: [],
   bootstrap: [AppComponent]

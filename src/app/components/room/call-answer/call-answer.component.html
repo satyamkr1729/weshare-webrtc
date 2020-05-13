@@ -1,0 +1,8 @@
+<div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
+    <div style="text-align: center; width: 100%;">{{data.caller}} is {{data.mode}} calling.</div>
+    <br>
+    <div fxLayout="row" fxLayoutAlign="space-between">
+        <button mat-raised-button (click)="action('accept')" color="primary">Accept</button>
+        <button mat-raised-button (click)="action('reject')" color="primary">Reject</button>
+    </div>
+</div>
