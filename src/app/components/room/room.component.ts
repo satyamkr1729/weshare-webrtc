@@ -16,19 +16,19 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 
 export class RoomComponent implements OnInit {
-  private socketId: string;
-  private myName: string;
-  private roomName: string;
-  private clientList: Client[];
-  private messages: any[];
-  private activeCalledClient: Client;
-  private matDialogRef: MatDialogRef<any>;
+  socketId: string;
+  myName: string;
+  roomName: string;
+  clientList: Client[];
+  messages: any[];
+  activeCalledClient: Client;
+  matDialogRef: MatDialogRef<any>;
 
   msgForm = new FormGroup({
     msg: new FormControl(''),
   });
 
-  constructor(private activatedRoute: ActivatedRoute,
+  constructor(public activatedRoute: ActivatedRoute,
     private router: Router,
     private socketHandler: SocketHandlerService,
     private dialog: MatDialog,
