@@ -175,26 +175,34 @@ export class Client {
     return this.pc;
   }
  
-  startCall(mode: string): Promise<any> {
+  startCall(mode: string, mediaStream?: MediaStream): Promise<any> {
     console.log(mode);
     if (mode === 'video')
       this.videoCalling = true;
     else if (mode === 'audio')
       this.audioCalling = true;
+    else if (mode === 'stream')
+      this.streaming = true;
 
-    return navigator.mediaDevices.getUserMedia({
-      audio: <boolean>(this.audioCalling || this.videoCalling),
-      video: <boolean>this.videoCalling,
-    }).then((stream) => {
-      this.localStream = stream;
-      return stream;
-    });
+    if (!this.streaming) {
+      return navigator.mediaDevices.getUserMedia({
+        audio: <boolean>(this.audioCalling || this.videoCalling),
+        video: <boolean>this.videoCalling,
+      }).then((stream) => {
+        this.localStream = stream;
+        return stream;
+      });
+    }
+
+    this.localStream = mediaStream;
+    return null;
   }
 
   endCall(): void {
     console.log('end');
     this.audioCalling = false;
     this.videoCalling = false;
+    this.streaming = false;
     if (this.localStream) {
       for(let sender of this.pc.getSenders()) {
         this.pc.removeTrack(sender);
@@ -215,6 +223,8 @@ export class Client {
       return 'video';
     else if (this.audioCalling)
       return 'audio';
+    else if (this.streaming)
+      return 'stream';
     else
       return 'chat';
   }

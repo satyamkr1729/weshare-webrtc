@@ -1,7 +1,14 @@
-<div id="video-container" fxLayout="column" fxLayoutAlign="space-evenly center" *ngIf="activeCalledClient">
-    <h2 id="caller-name" style="color: white;">{{activeCalledClient.getUserName()}}</h2>
-    <video autoplay [hidden]="activeCalledClient.getCurrentCallMode() !== 'video'"></video>
-    <img src="assets/caller.png" [hidden]="activeCalledClient.getCurrentCallMode() === 'video'">
+<input type="file" style="display: none;" id="file-selector" (change)="onFileSelect($event)" #fileSelector>
+<div class="app-header">
+    <mat-toolbar color="primary" class="app-header" fxLayout="row" fxLayoutAlign="space-between center">
+        <span>WeShare</span>
+        <button mat-raised-button (click)="onShare()" class="white-button">Share</button>
+    </mat-toolbar>
+</div>
+<div id="video-container" fxLayout="column" fxLayoutAlign="space-evenly center" *ngIf="broadcast || activeCalledClient">
+    <h2 id="caller-name" style="color: white;" *ngIf="activeCalledClient">{{activeCalledClient.getUserName()}}</h2>
+    <video autoplay [hidden]="activeCalledClient && activeCalledClient.getCurrentCallMode() === 'audio'" #receivedVideo></video>
+    <img src="assets/caller.png" [hidden]="!activeCalledClient || activeCalledClient.getCurrentCallMode() !== 'audio'">
     <button mat-raised-button (click)="onCallTerminate()" color="primary">End</button>
 </div>
 <mat-drawer-container>

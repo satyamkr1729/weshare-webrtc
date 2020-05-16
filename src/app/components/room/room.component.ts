@@ -1,4 +1,4 @@
-import { Component, OnInit, ɵpatchComponentDefWithScope, NgZone } from '@angular/core';
+import { Component, OnInit, ɵpatchComponentDefWithScope, NgZone, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SocketHandlerService } from '../../services/socket-handler.service';
 import { Client } from 'src/app/utils/client';
@@ -8,6 +8,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CallModeSelectorComponent } from './call-mode-selector/call-mode-selector.component';
 import { CallAnswerComponent } from './call-answer/call-answer.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ShareMenuComponent } from '../share-menu/share-menu.component';
 
 @Component({
   selector: 'app-room',
@@ -22,7 +23,16 @@ export class RoomComponent implements OnInit {
   clientList: Client[];
   messages: any[];
   activeCalledClient: Client;
-  matDialogRef: MatDialogRef<any>;
+  broadcast: Boolean;
+  private matDialogRef: MatDialogRef<any>;
+  private videoViewer: any;
+
+  @ViewChild('fileSelector', {static: false}) fileSelector: ElementRef
+  @ViewChild('receivedVideo', {static: false}) set content(content: ElementRef) {
+    if (content) {
+      this.videoViewer = content.nativeElement;
+    }
+  }
 
   msgForm = new FormGroup({
     msg: new FormControl(''),
@@ -34,7 +44,7 @@ export class RoomComponent implements OnInit {
     private dialog: MatDialog,
     private notifier: MatSnackBar,
     private ngZone: NgZone) { }
- 
+
   private connectAllClients(): void {
     for(let client of this.clientList) {
       client.connect();
@@ -106,6 +116,8 @@ export class RoomComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.activeCalledClient = null;
+    this.broadcast = false;
     this.activatedRoute.paramMap.subscribe({
       next: (obj) => {
         if (!window.history.state.socketId) {
@@ -160,7 +172,7 @@ export class RoomComponent implements OnInit {
             if (result === 'accept') {
               this.activeCalledClient = client;
               client.sendMessage(JSON.stringify({type: 'call-accepted'}));
-            } else if (result === 'reject') {
+            } else {
               client.sendMessage(JSON.stringify({type: 'call-rejected'}));
             }
           });
@@ -168,7 +180,7 @@ export class RoomComponent implements OnInit {
         break;
       
       case 'call-accepted': 
-        client.addTracksToPc();
+          client.addTracksToPc();
         break;
       
       case 'call-rejected':
@@ -177,7 +189,7 @@ export class RoomComponent implements OnInit {
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
           client.endCall(); 
           //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
-          this.notifier.open('Call Rejected!!', 'OK', {
+          this.notifier.open(`Call Rejected by ${client.getUserName()}!!`, 'OK', {
             duration: 3000,
           });
         });
@@ -240,14 +252,61 @@ export class RoomComponent implements OnInit {
   }
 
   onCallTerminate(): void {
-    this.activeCalledClient.sendMessage(JSON.stringify({type: 'call-end'}));
+    if (this.activeCalledClient) {
+      this.activeCalledClient.sendMessage(JSON.stringify({type: 'call-end'}));
+    } else if (this.broadcast) {
+      for (let client of this.clientList) {
+        client.sendMessage(JSON.stringify({type: 'call-end'}));
+      }
+    }
     this.endCurrentCall();
   }
 
   private endCurrentCall(): void {
     //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
-    (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
-    this.activeCalledClient.endCall();
-    this.activeCalledClient = null;
+    if (this.activeCalledClient) {
+      (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
+      this.activeCalledClient.endCall();
+      this.activeCalledClient = null;
+    } else {
+      this.broadcast = false;
+      this.fileSelector.nativeElement.value = '';
+      this.videoViewer.src = "";
+      for (let client of this.clientList) {
+        client.endCall();
+      }
+    }
+  }
+
+  onShare(): void {
+    if (this.matDialogRef)
+      this.matDialogRef.close();
+    this.matDialogRef = this.dialog.open(ShareMenuComponent, {
+      width: '250px',
+      hasBackdrop: true
+    });
+
+    this.matDialogRef.afterClosed().subscribe((result) => {
+      switch(result) {
+        case 'stream': this.fileSelector.nativeElement.click(); break;
+        case 'picture':
+        case 'video':
+        case 'file': console.log(result);
+      }
+    });
+  }
+
+  onFileSelect(ev: Event): void {
+    let file = (<HTMLInputElement>(ev.target)).files[0];
+    this.broadcast = true;
+    setTimeout(() => {
+      this.videoViewer.src = URL.createObjectURL(file);
+      this.videoViewer.controls = true;
+      this.videoViewer.autoplay = false;
+      for(let client of this.clientList) {
+        client.startCall('stream', this.videoViewer.captureStream());
+        client.sendMessage(JSON.stringify({type: 'call', mode: 'stream'}));
+      }
+    }, 500);
   }
 }

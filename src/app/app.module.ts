@@ -25,6 +25,7 @@ import {MatDividerModule} from '@angular/material/divider';
 
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { environment } from 'src/environments/environment';
+import { ShareMenuComponent } from './components/share-menu/share-menu.component';
 
 const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.com/' , options: {secure: true} };
 
@@ -36,6 +37,7 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
     RoomComponent,
     CallModeSelectorComponent,
     CallAnswerComponent,
+    ShareMenuComponent,
   ],
   imports: [
     BrowserModule,
@@ -60,6 +62,7 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
     DetailComponent,
     CallModeSelectorComponent,
     CallAnswerComponent,
+    ShareMenuComponent
   ],
   providers: [],
   bootstrap: [AppComponent]

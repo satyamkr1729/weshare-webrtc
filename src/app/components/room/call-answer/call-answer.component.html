@@ -1,5 +1,8 @@
 <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
-    <div style="text-align: center; width: 100%;">{{data.caller}} is {{data.mode}} calling.</div>
+    <div style="text-align: center; width: 100%;" *ngIf="data.mode !== 'stream'; else stream">{{data.caller}} is {{data.mode}} calling.</div>
+    <ng-template #stream>
+        <div style="text-align: center; width: 100%;">{{data.caller}} wants to stream a video.</div>
+    </ng-template>
     <br>
     <div fxLayout="row" fxLayoutAlign="space-between">
         <button mat-raised-button (click)="action('accept')" color="primary">Accept</button>
