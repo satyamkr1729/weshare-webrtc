@@ -1,15 +1,16 @@
 import { SocketHandlerService } from '../services/socket-handler.service';
 
 export class Client {
-  private socketId: string;
-  private userName: string;
-  private pc: RTCPeerConnection;
-  private dataChannel: RTCDataChannel;
-  private connected: Boolean;
-  private videoCalling: Boolean;
-  private audioCalling: Boolean;
-  private streaming: Boolean;
-  private localStream: MediaStream;
+  private _socketId: string;
+  private _userName: string;
+  private _pc: RTCPeerConnection;
+  private _dataChannel: RTCDataChannel;
+  private _connected: Boolean;
+  private _videoCalling: Boolean;
+  private _audioCalling: Boolean;
+  private _streaming: Boolean;
+  private _hasReceivedCall: Boolean;
+  private _localStream: MediaStream;
   
   private pcConfig = {
     'iceServers': [{
@@ -18,23 +19,24 @@ export class Client {
   };
 
   constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string) {
-    this.socketId = socketId;
-    this.userName = userName;
-    this.connected = false;
+    this._socketId = socketId;
+    this._userName = userName;
+    this._connected = false;
     this.createPeerConnection();
-    this.dataChannel = null;
-    this.videoCalling = false;
-    this.audioCalling = false;
-    this.streaming = false;
-    this.localStream = null;
+    this._dataChannel = null;
+    this._videoCalling = false;
+    this._audioCalling = false;
+    this._streaming = false;
+    this._hasReceivedCall = false;
+    this._localStream = null;
   }
 
   private createPeerConnection(): void {
     try {
-      this.pc = new RTCPeerConnection(this.pcConfig);
-      this.pc.onicecandidate = this.handleIceCandidate.bind(this);
-      this.pc.oniceconnectionstatechange = this.handleIceCandidateStateChange.bind(this);
-      this.pc.onnegotiationneeded = this.handleNegotiation.bind(this);
+      this._pc = new RTCPeerConnection(this.pcConfig);
+      this._pc.onicecandidate = this.handleIceCandidate.bind(this);
+      this._pc.oniceconnectionstatechange = this.handleIceCandidateStateChange.bind(this);
+      this._pc.onnegotiationneeded = this.handleNegotiation.bind(this);
       console.log('created Rtc peer connection');
     } catch (err) {
       console.log(err);
@@ -48,7 +50,7 @@ export class Client {
           label: ev.candidate.sdpMLineIndex,
           id: ev.candidate.sdpMid,
           candidate: ev.candidate.candidate
-        }, this.socketId);
+        }, this._socketId);
     } else {
       console.log('End of candidates');
     }
@@ -59,35 +61,35 @@ export class Client {
   }
 
   private handleNegotiation(): void {
-    console.log(this.pc);
-    this.pc.createOffer().then((offer) => {
-      return this.pc.setLocalDescription(offer);
+    console.log(this._pc);
+    this._pc.createOffer().then((offer) => {
+      return this._pc.setLocalDescription(offer);
     }).then(() => {
       const msg = {
         type: null,
-        sdp: this.pc.localDescription,
+        sdp: this._pc.localDescription,
       };
-      if (this.videoCalling)
+      if (this._videoCalling)
         msg.type = 'video-offer';
-      else if (this.audioCalling) 
+      else if (this._audioCalling) 
         msg.type = 'audio-offer';
       else
         msg.type = 'data-offer';
-      this.socketHandler.sendMessage(msg, this.socketId);
+      this.socketHandler.sendMessage(msg, this._socketId);
     }).catch((err) => {
       console.log(err);
     });
   }
 
   private createDataChannel(): void {
-    this.dataChannel = this.pc.createDataChannel('mychannel');
+    this._dataChannel = this._pc.createDataChannel('mychannel');
     this.intializeDataChanneListeners();
   }
 
   private intializeDataChanneListeners(): void {
-    this.dataChannel.onclose = this.handleDataChannelStateChange.bind(this);
-    this.dataChannel.onopen = this.handleDataChannelStateChange.bind(this);
-    //this.dataChannel.onmessage = this.handleMessage.bind(this);
+    this._dataChannel.onclose = this.handleDataChannelStateChange.bind(this);
+    this._dataChannel.onopen = this.handleDataChannelStateChange.bind(this);
+    //this._dataChannel.onmessage = this.handleMessage.bind(this);
     
   }
 
@@ -96,18 +98,18 @@ export class Client {
   }
 
   private handleDataChannel(ev: any): void {
-    this.dataChannel = ev.channel;
+    this._dataChannel = ev.channel;
     this.intializeDataChanneListeners();
   }
 
   private createAndSendAnswer(): Promise<any> {
-    return this.pc.createAnswer().then((answer) => {
-      return this.pc.setLocalDescription(answer);
+    return this._pc.createAnswer().then((answer) => {
+      return this._pc.setLocalDescription(answer);
     }).then(() => {
       this.socketHandler.sendMessage({
         type: 'answer',
-        sdp: this.pc.localDescription,
-      }, this.socketId);
+        sdp: this._pc.localDescription,
+      }, this._socketId);
     }).catch((err) => {
       console.log(err);
     });
@@ -119,10 +121,10 @@ export class Client {
 
   handleDataOffer(msg): Promise<any> {
     const desc = new RTCSessionDescription(msg.sdp);
-    if (!this.dataChannel) {
-      this.pc.ondatachannel = this.handleDataChannel.bind(this);
+    if (!this._dataChannel) {
+      this._pc.ondatachannel = this.handleDataChannel.bind(this);
     }
-    return this.pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
+    return this._pc.setRemoteDescription(desc).then(this.createAndSendAnswer.bind(this));
   }
         
   handleCallOffer(): Promise<any> {
@@ -132,8 +134,8 @@ export class Client {
   }
 
   addTracksToPc(): void {
-    for (let track of this.localStream.getTracks()) {
-      this.pc.addTrack(track, this.localStream);
+    for (let track of this._localStream.getTracks()) {
+      this._pc.addTrack(track, this._localStream);
     };
   }
 
@@ -142,95 +144,96 @@ export class Client {
       sdpMLineIndex: msg.label,
       candidate: msg.candidate,
     });
-    this.pc.addIceCandidate(candidate).catch((err) => console.log(err));
+    this._pc.addIceCandidate(candidate).catch((err) => console.log(err));
   }
 
   handleAnswer(msg: any): void {
-    this.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-    this.connected = true;
-  }
-
-  getSocketId(): string {
-    return this.socketId;
-  }
-
-  getUserName(): string {
-    return this.userName;
+    this._pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+    this._connected = true;
   }
 
   isConnected(): Boolean {
-    return this.connected;
+    return this._connected;
   }
 
   sendMessage(msg): void {
-    if (this.dataChannel)
-      this.dataChannel.send(msg);
-  }
-
-  getDataChannel(): RTCDataChannel {
-    return this.dataChannel;
-  }
-
-  getPc(): RTCPeerConnection {
-    return this.pc;
+    if (this._dataChannel)
+      this._dataChannel.send(msg);
   }
  
   startCall(mode: string, mediaStream?: MediaStream): Promise<any> {
     console.log(mode);
     if (mode === 'video')
-      this.videoCalling = true;
+      this._videoCalling = true;
     else if (mode === 'audio')
-      this.audioCalling = true;
+      this._audioCalling = true;
     else if (mode === 'stream')
-      this.streaming = true;
+      this._streaming = true;
 
-    if (!this.streaming) {
+    if (!this._streaming) {
       return navigator.mediaDevices.getUserMedia({
-        audio: <boolean>(this.audioCalling || this.videoCalling),
-        video: <boolean>this.videoCalling,
+        audio: <boolean>(this._audioCalling || this._videoCalling),
+        video: <boolean>this._videoCalling,
       }).then((stream) => {
-        this.localStream = stream;
+        this._localStream = stream;
         return stream;
       });
     }
 
-    this.localStream = mediaStream;
+    this._localStream = mediaStream;
     return null;
   }
 
   endCall(): void {
     console.log('end');
-    this.audioCalling = false;
-    this.videoCalling = false;
-    this.streaming = false;
-    if (this.localStream) {
-      for(let sender of this.pc.getSenders()) {
-        this.pc.removeTrack(sender);
+    this._audioCalling = false;
+    this._videoCalling = false;
+    this._streaming = false;
+    this.callRecieved = false;
+    if (this._localStream) {
+      for(let sender of this._pc.getSenders()) {
+        this._pc.removeTrack(sender);
       }
-      for(let track of this.localStream.getTracks()) {
+      for(let track of this._localStream.getTracks()) {
         track.stop();
       }
     }
-    this.localStream = null;
+    this._localStream = null;
   }
 
-  isCalling(): Boolean {
-    return this.videoCalling || this.audioCalling;
-  }
-
-  getCurrentCallMode(): string {
-    if (this.videoCalling)
+  get currentCallMode(): string {
+    if (this._videoCalling)
       return 'video';
-    else if (this.audioCalling)
+    else if (this._audioCalling)
       return 'audio';
-    else if (this.streaming)
+    else if (this._streaming)
       return 'stream';
     else
       return 'chat';
   }
 
-  getLocalStream(): MediaStream {
-    return this.localStream;
+  get callReceiveStatus(): Boolean {
+    return this._hasReceivedCall;
+  }
+
+  set callRecieved(mode: Boolean) {
+    this._hasReceivedCall = mode;
+  } 
+
+  get socketId(): string {
+    return this._socketId;
+  }
+
+  get userName(): string {
+    return this._userName;
+  }
+
+  get dataChannel(): RTCDataChannel {
+    return this._dataChannel;
+  }
+
+  get pc(): RTCPeerConnection {
+    return this._pc;
   }
 }
 

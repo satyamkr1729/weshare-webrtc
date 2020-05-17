@@ -6,16 +6,17 @@
     </mat-toolbar>
 </div>
 <div id="video-container" fxLayout="column" fxLayoutAlign="space-evenly center" *ngIf="broadcast || activeCalledClient">
-    <h2 id="caller-name" style="color: white;" *ngIf="activeCalledClient">{{activeCalledClient.getUserName()}}</h2>
-    <video autoplay [hidden]="activeCalledClient && activeCalledClient.getCurrentCallMode() === 'audio'" #receivedVideo></video>
-    <img src="assets/caller.png" [hidden]="!activeCalledClient || activeCalledClient.getCurrentCallMode() !== 'audio'">
+    <h2 id="caller-name" style="color: white;" *ngIf="activeCalledClient">
+        <span *ngIf="!activeCalledClient.callReceiveStatus">Calling </span>{{activeCalledClient.userName}}</h2>
+    <video autoplay [hidden]="activeCalledClient && activeCalledClient.currentCallMode === 'audio'" #receivedVideo></video>
+    <img src="assets/caller.png" [hidden]="!activeCalledClient || activeCalledClient.currentCallMode !== 'audio'">
     <button mat-raised-button (click)="onCallTerminate()" color="primary">End</button>
 </div>
 <mat-drawer-container>
     <mat-drawer mode="side" opened style="min-width: 20vw;">
         <mat-list role="list" style="padding: 0;">
             <div  *ngFor="let client of clientList">
-                <mat-list-item role="listitem" (click)="handleCallAction(client)">{{client.getUserName()}}</mat-list-item>
+                <mat-list-item role="listitem" (click)="handleCallAction(client)">{{client.userName}}</mat-list-item>
                 <mat-divider></mat-divider>
             </div>
         </mat-list>

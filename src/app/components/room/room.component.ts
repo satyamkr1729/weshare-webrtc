@@ -48,8 +48,8 @@ export class RoomComponent implements OnInit {
   private connectAllClients(): void {
     for(let client of this.clientList) {
       client.connect();
-      client.getDataChannel().onmessage = (ev) => this.msgReceivedHandler(client, ev.data);
-      client.getPc().ontrack = (ev) => {
+      client.dataChannel.onmessage = (ev) => this.msgReceivedHandler(client, ev.data);
+      client.pc.ontrack = (ev) => {
         //(<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
         (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
       };
@@ -59,20 +59,20 @@ export class RoomComponent implements OnInit {
   private initializeSocketMessageListener(): void {
     this.socketHandler.getMessage().subscribe({
       next: (obj) => {
-        const client: Client = this.clientList.find((client) => client.getSocketId() === obj.socketId);
+        const client: Client = this.clientList.find((client) => client.socketId === obj.socketId);
         switch(obj.message.type) {
           case 'data-offer':
             client.handleDataOffer(obj.message).catch((err) => {
               console.log(err);
               this.ngZone.run(() => {
-                this.notifier.open(`Connection to ${client.getUserName()} failed`, 'OK');
+                this.notifier.open(`Connection to ${client.userName} failed`, 'OK');
               });
             });
             break;
 
           case 'audio-offer':
           case 'video-offer':
-            client.getPc().setRemoteDescription(new RTCSessionDescription(obj.message.sdp)).then(() => {
+            client.pc.setRemoteDescription(new RTCSessionDescription(obj.message.sdp)).then(() => {
               return client.startCall(obj.message.type.split('-')[0]);
             }).catch((err) => {
               console.log(err);
@@ -102,11 +102,11 @@ export class RoomComponent implements OnInit {
       next: (client) => {
         client = new Client(this.socketHandler, client.socketId, client.userName);
         this.clientList.push(client);
-        client.getPc().ontrack = (ev) => {
+        client.pc.ontrack = (ev) => {
           //(<HTMLVideoElement>document.querySelector('div#video-container')).style.display = 'block';
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = ev.streams[0];
         };
-        client.getPc().addEventListener('datachannel', (ev) => {
+        client.pc.addEventListener('datachannel', (ev) => {
           ev.channel.onmessage = (msgEvent) => {
             this.msgReceivedHandler(client, msgEvent.data);
           }
@@ -150,7 +150,7 @@ export class RoomComponent implements OnInit {
     switch(msg.type) {
       case 'text': 
         this.ngZone.run(() => {
-          this.messages.push({sender: client.getUserName(), text: msg.body});
+          this.messages.push({sender: client.userName, text: msg.body});
         });
         // (<HTMLElement>document.querySelector('input#user-msg')).click();
         // document.body.click();
@@ -163,7 +163,7 @@ export class RoomComponent implements OnInit {
           if (this.matDialogRef)
             this.matDialogRef.close();
           this.matDialogRef = this.dialog.open(CallAnswerComponent, {
-            data: {mode: msg.mode, caller: client.getUserName()},
+            data: {mode: msg.mode, caller: client.userName},
             width: '250px',
             hasBackdrop: true,
           });
@@ -171,6 +171,7 @@ export class RoomComponent implements OnInit {
             this.matDialogRef = null;
             if (result === 'accept') {
               this.activeCalledClient = client;
+              client.callRecieved = true;
               client.sendMessage(JSON.stringify({type: 'call-accepted'}));
             } else {
               client.sendMessage(JSON.stringify({type: 'call-rejected'}));
@@ -180,7 +181,10 @@ export class RoomComponent implements OnInit {
         break;
       
       case 'call-accepted': 
-          client.addTracksToPc();
+        this.ngZone.run(() => {
+          client.callRecieved = true;
+        });
+        client.addTracksToPc();
         break;
       
       case 'call-rejected':
@@ -189,7 +193,7 @@ export class RoomComponent implements OnInit {
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = null;
           client.endCall(); 
           //(<HTMLElement>document.querySelector('div#video-container')).style.display = 'none';
-          this.notifier.open(`Call Rejected by ${client.getUserName()}!!`, 'OK', {
+          this.notifier.open(`Call Rejected by ${client.userName}!!`, 'OK', {
             duration: 3000,
           });
         });
@@ -218,7 +222,7 @@ export class RoomComponent implements OnInit {
           (<HTMLVideoElement>document.querySelector('div#video-container video')).srcObject = stream;
           client.sendMessage(JSON.stringify({type: 'call', mode: result}));
           /* stream.getTracks().forEach((track) => {
-            client.getPc().addTrack(track, stream);
+            client.pc.addTrack(track, stream);
           });*/
         }).catch((err) => {
           console.log(err);
