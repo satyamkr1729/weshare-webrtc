@@ -24,8 +24,9 @@ import {MatListModule} from '@angular/material/list';
 import {MatDividerModule} from '@angular/material/divider';
 
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
-import { environment } from 'src/environments/environment';
 import { ShareMenuComponent } from './components/share-menu/share-menu.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.com/' , options: {secure: true} };
 
@@ -56,7 +57,8 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
     MatListModule,
     MatSnackBarModule,
     MatSidenavModule,
-    SocketIoModule.forRoot(socketConfig)
+    SocketIoModule.forRoot(socketConfig),
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   entryComponents: [
     DetailComponent,
