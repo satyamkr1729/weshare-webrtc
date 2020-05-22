@@ -1,10 +1,4 @@
 <input type="file" style="display: none;" id="file-selector" (change)="onFileSelect($event)" #fileSelector>
-<div class="app-header">
-    <mat-toolbar color="primary" class="app-header" fxLayout="row" fxLayoutAlign="space-between center">
-        <span>WeShare</span>
-        <button mat-raised-button (click)="onShare()" class="white-button">Share</button>
-    </mat-toolbar>
-</div>
 <div id="video-container" fxLayout="column" fxLayoutAlign="space-evenly center" *ngIf="broadcast || activeCalledClient">
     <h2 id="caller-name" style="color: white;" *ngIf="activeCalledClient">
         <span *ngIf="!activeCalledClient.callReceiveStatus">Calling </span>{{activeCalledClient.userName}}</h2>
@@ -12,48 +6,56 @@
     <img src="assets/caller.png" [hidden]="!activeCalledClient || activeCalledClient.currentCallMode !== 'audio'">
     <button mat-raised-button (click)="onCallTerminate()" color="primary">End</button>
 </div>
-<mat-drawer-container>
-    <mat-drawer mode="side" opened style="min-width: 20vw;">
-        <mat-list role="list" style="padding: 0;">
-            <div  *ngFor="let client of clientList">
-                <mat-list-item role="listitem" (click)="handleCallAction(client)">{{client.userName}}</mat-list-item>
-                <mat-divider></mat-divider>
-            </div>
-        </mat-list>
-    </mat-drawer>
-    <mat-drawer-content>
-        <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
-            <div class="text-chat" #scrollMe [scrollTop]="scrollMe.scrollHeight">
-                <div *ngFor="let msg of messages">
-                    <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName; else received">
-                        <div class="msg-container" fxLayout="column">
-                            <div class="sender-name">You</div>
-                            <mat-card>
-                                <mat-card-content>{{msg.text}}</mat-card-content>
-                            </mat-card>
-                        </div>
-                    </div>
-                    <ng-template #received>
-                        <div class="msg-row msg-received" fxLayout="row">
+<div fxLayout="column" style="height: 100%">
+    <div class="app-header" fxFlex="0 1 auto">
+        <mat-toolbar color="primary" class="app-header" fxLayout="row" fxLayoutAlign="space-between center">
+            <span>WeShare</span>
+            <button mat-raised-button (click)="onShare()" class="white-button">Share</button>
+        </mat-toolbar>
+    </div>
+    <mat-drawer-container fxFlex="1 1 auto">
+        <mat-drawer mode="side" opened style="min-width: 20vw;">
+            <mat-list role="list" style="padding: 0;">
+                <div  *ngFor="let client of clientList">
+                    <mat-list-item role="listitem" (click)="handleCallAction(client)">{{client.userName}}</mat-list-item>
+                    <mat-divider></mat-divider>
+                </div>
+            </mat-list>
+        </mat-drawer>
+        <mat-drawer-content>
+            <div fxLayout="column" fxLayoutAlign="space-between" style="height: 100%;">
+                <div class="text-chat" #scrollMe [scrollTop]="scrollMe.scrollHeight">
+                    <div *ngFor="let msg of messages">
+                        <div class="msg-row msg-sent" fxLayout="row" fxLayoutAlign="end" *ngIf="msg.sender === this.myName; else received">
                             <div class="msg-container" fxLayout="column">
-                                <div class="sender-name">{{msg.sender}}</div>
+                                <div class="sender-name">You</div>
                                 <mat-card>
                                     <mat-card-content>{{msg.text}}</mat-card-content>
                                 </mat-card>
                             </div>
                         </div>
-                    </ng-template>
+                        <ng-template #received>
+                            <div class="msg-row msg-received" fxLayout="row">
+                                <div class="msg-container" fxLayout="column">
+                                    <div class="sender-name">{{msg.sender}}</div>
+                                    <mat-card>
+                                        <mat-card-content>{{msg.text}}</mat-card-content>
+                                    </mat-card>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+                <div class="send-msg-form" style="margin: 10px;">
+                    <form [formGroup]="msgForm" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="10px" (ngSubmit)="onMsgSend()">
+                        <mat-form-field fxFlex="1 1 auto">
+                            <mat-label>Message</mat-label>
+                            <input matInput id="user-msg" placeholder="Your message" formControlName="msg" autocomplete="off">
+                        </mat-form-field>
+                        <button  mat-raised-button type="submit" color="primary">Submit</button>
+                    </form>
                 </div>
             </div>
-            <div class="send-msg-form" style="margin: 10px;">
-                <form [formGroup]="msgForm" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="10px" (ngSubmit)="onMsgSend()">
-                    <mat-form-field fxFlex="1 1 auto">
-                        <mat-label>Message</mat-label>
-                        <input matInput id="user-msg" placeholder="Your message" formControlName="msg" autocomplete="off">
-                    </mat-form-field>
-                    <button  mat-raised-button type="submit" color="primary">Submit</button>
-                </form>
-            </div>
-        </div>
-    </mat-drawer-content>
-</mat-drawer-container>
+        </mat-drawer-content>
+    </mat-drawer-container>
+</div>

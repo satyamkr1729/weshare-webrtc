@@ -1,9 +1,11 @@
-<div class="app-header">
-    <mat-toolbar color="primary" class="app-header">WeShare</mat-toolbar>
-</div>
-<div fxLayout="row" fxLayoutAlign="center center" style="height: 91%; background-color: #303030;">
-    <div fxLayout="column" fxLayoutAlign="space-around center" fxLayoutGap="100px">
-        <button mat-raised-button (click)="openCreateRoomDialog()" color="primary" style="width: 300px">Create Room</button>
-        <button mat-raised-button (click)="openJoinRoomDialog()" color="primary" style="width: 300px;">Join Room</button>
+<div fxLayout="column" style="height: 100%;">
+    <div class="app-header" fxFlex="0 1 auto">
+        <mat-toolbar color="primary" class="app-header">WeShare</mat-toolbar>
+    </div>
+    <div fxFlex="1 1 auto" fxLayout="row" fxLayoutAlign="center center" style="height: 91%; background-color: #303030;">
+        <div fxLayout="column" fxLayoutAlign="space-around center" fxLayoutGap="100px">
+            <button mat-raised-button (click)="openCreateRoomDialog()" color="primary" style="width: 300px">Create Room</button>
+            <button mat-raised-button (click)="openJoinRoomDialog()" color="primary" style="width: 300px;">Join Room</button>
+        </div>
     </div>
 </div>
