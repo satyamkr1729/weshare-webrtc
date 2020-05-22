@@ -58,7 +58,7 @@ const socketConfig: SocketIoConfig = { url: 'https://weshare-webrtc.herokuapp.co
     MatSnackBarModule,
     MatSidenavModule,
     SocketIoModule.forRoot(socketConfig),
-    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production, registrationStrategy: 'registerImmediately' })
   ],
   entryComponents: [
     DetailComponent,
