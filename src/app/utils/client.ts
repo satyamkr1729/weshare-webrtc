@@ -13,9 +13,16 @@ export class Client {
   private _localStream: MediaStream;
   
   private pcConfig = {
-    'iceServers': [{
-      urls: 'stun:stun.stunprotocol.org',
-    }],
+    'iceServers': [
+      {
+        urls: 'stun:stun.stunprotocol.org',
+      },
+      {
+        urls: 'turn:numb.viagenie.ca',
+        credential: 'muazkh',
+        username: 'webrtc@live.com'
+      }
+    ],
   };
 
   constructor(private socketHandler: SocketHandlerService, socketId: string, userName: string) {
